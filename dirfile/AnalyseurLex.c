@@ -60,6 +60,8 @@ enum
 
 FILE *yyin;
 char yytext[1024];
+int NumLigne = 1;
+int TabValeurRetour[2];
 
 int isotherchar (int c)
 {
@@ -90,7 +92,14 @@ int ChercherLexeme (char yytext[])
 
 } // ChercherLexeme ()
 
-int yylex()
+int *ValeurRetour (int lexeme)
+{
+	TabValeurRetour[0] = lexeme;
+	TabValeurRetour[1] = NumLigne;
+	return TabValeurRetour;
+} // ValeurRetour ()
+
+int *yylex()
 {
 	int etat, pText, c;
 	etat = pText = 0;
@@ -99,9 +108,12 @@ int yylex()
 	{
 
 		c = fgetc (yyin);
+
 		switch (etat)
 		{
 			case FIRSTCHAR:
+				if ('\n' == c)
+					++NumLigne;
 				if (isspace (c))
 					break;
 				yytext[pText++] = c;
@@ -118,15 +130,10 @@ int yylex()
 					etat = SUP;
 				else if ('.' == c)
 					etat = POINT;
-				else if (isotherchar (c))
-				{
-					yytext[pText++] = '\0';
-					return c;
-				}
 				else
 				{
 					yytext[pText++] = '\0';
-					return c;
+					return ValeurRetour(c);
 				}
 
 				break;
@@ -138,7 +145,7 @@ int yylex()
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return NOMBRE;
+					return ValeurRetour(NOMBRE);
 				}
 				break;
 
@@ -149,7 +156,7 @@ int yylex()
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return ChercherLexeme(yytext);
+					return ValeurRetour(ChercherLexeme(yytext));
 				}
 				break;
 
@@ -158,13 +165,13 @@ int yylex()
 				{
 					yytext[pText++] = c;
 					yytext[pText++] = '\0';
-					return AFFECTATION;
+					return ValeurRetour(AFFECTATION);
 				}
 				else
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return ':';
+					return ValeurRetour(':');
 				}
 			break;
 
@@ -173,19 +180,19 @@ int yylex()
 				{
 					yytext[pText++] = c;
 					yytext[pText++] = '\0';
-					return DIFFERENT;
+					return ValeurRetour(DIFFERENT);
 				}
 				else if ('=' == c)
 				{
 					yytext[pText++] = c;
 					yytext[pText++] = '\0';
-					return INFEGAL;
+					return ValeurRetour(INFEGAL);
 				}
 				else
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return '<';
+					return ValeurRetour('<');
 				}
 				break;
 
@@ -194,13 +201,13 @@ int yylex()
 				{
 					yytext[pText++] = c;
 					yytext[pText++] = '\0';
-					return SUPEGAL;
+					return ValeurRetour(SUPEGAL);
 				}
 				else
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return '>';
+					return ValeurRetour('>');
 				}
 				break;
 
@@ -209,13 +216,13 @@ int yylex()
 				{
 					yytext[pText++] = c;
 					yytext[pText++] = '\0';
-					return BORNETABLEAU;
+					return ValeurRetour(BORNETABLEAU);
 				}
 				else
 				{
 					ungetc(c, yyin);
 					yytext[pText++] = '\0';
-					return '.';
+					return ValeurRetour('.');
 				}
 				break;
 
@@ -226,8 +233,8 @@ int yylex()
 //int main (int argc, char *argv[])
 //{
 //	
-//	int lexeme;
-//
+//	int *lexeme;
+//	lexeme = malloc (2 * sizeof(int));
 //	if (1 + 1 != argc)
 //	{
 //		printf ("You're a n00b, expected only one argument");
@@ -235,7 +242,7 @@ int yylex()
 //	}
 //
 //	yyin = fopen (argv[1], "r");
-//	for (lexeme = yylex(); EOF != lexeme; lexeme = yylex())
-//		printf ("%d\n", lexeme);
+//	for (lexeme = yylex(); EOF != lexeme[0]; lexeme = yylex())
+//		printf ("%d\n", lexeme[0]);
 //	fclose (yyin);
 //} // main()

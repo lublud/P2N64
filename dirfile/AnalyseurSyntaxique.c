@@ -49,19 +49,22 @@
 #define OF 286
 
 #define Accept(attendu) AcceptLex(attendu, __FILE__, __LINE__)
+#define lexeme TabLexeme[0]
+#define LinePas TabLexeme[1]
 
-int lexeme;
+char *FilePas;
+int *TabLexeme;
 
 void AcceptLex (const int attendu, const char *File, const int Line)
 {
 	if (attendu != lexeme)
 	{
-		printf ("Erreur dans le fichier %s:%d\nAttendu : %d\nReçu : %d\n",
-				File, Line);
+		printf ("Error in file %s:%d[%s:%d]\nReceived: %s\n",
+				FilePas, LinePas, File, Line, yytext);
 		exit (1);
 	}
 	printf ("%d\n", lexeme);
-	lexeme = yylex();
+	TabLexeme = yylex();
 } // Accept()
 
 void ProgrammePascal ()
@@ -485,9 +488,12 @@ int main (int argc, char *argv[])
 		printf ("You're a n00b, expected only one argument");
 		exit (1);
 	}
+	FilePas = argv[1];
+	TabLexeme = (int *) malloc (2 * sizeof(int));
 
 	yyin = fopen (argv[1], "r");
-	lexeme = yylex ();
+	TabLexeme = yylex ();
 	ProgrammePascal ();
+	//free (TabLexeme);
 	fclose (yyin);
 } // main()
