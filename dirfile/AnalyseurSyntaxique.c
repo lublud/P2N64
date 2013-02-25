@@ -392,8 +392,9 @@ void Comparaison ()
 
 void SuiteComparaison ()
 {
-	if (AND == lexeme || OR == lexeme || ')' == lexeme ||
-		',' == lexeme || ']' == lexeme)
+	if (AND == lexeme || OR == lexeme  || ')' == lexeme ||
+		',' == lexeme || ']' == lexeme || ';' == lexeme ||
+		THEN == lexeme|| DO == lexeme  || END == lexeme)
 		return;
 
 	OperateurRelationnel ();
