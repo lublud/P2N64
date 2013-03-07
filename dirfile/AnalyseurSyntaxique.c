@@ -15,45 +15,11 @@
 
 #include "AnalyseurLex.c"
 
-#define PROGRAM 256
-#define IDENTIFIANT 257
-#define NOMBRE 258
-#define DIFFERENT 259
-#define INFEGAL 260
-#define SUPEGAL 261
-#define AFFECTATION 262
-#define BORNETABLEAU 263 // correspond au .. lors de la création 
-						 // d'un tableau array[0..1] tableau entre 0 et 1.
-#define DIV 264 // division entière !
-#define MOD 265
-#define OR 266
-#define AND 267
-#define NOT 268
-#define VAR 269
-#define INTEGER 270
-#define BOOL 271
-#define TRUE 272
-#define FALSE 273
-#define PROCEDURE 274
-#define FUNCTION 275
-#define BEGIN 276
-#define END 277
-#define WHILE 278
-#define DO 279
-#define IF 280
-#define THEN 281
-#define ELSE 282
-#define READLN 283
-#define WRITELN 284
-#define ARRAY 285
-#define OF 286
-
 #define Accept(attendu) AcceptLex(attendu, __FILE__, __LINE__)
-#define lexeme TabLexeme[0]
-#define LinePas TabLexeme[1]
+#define Erreur(attendu) ErreurLex(attendu, __FILE__, __LINE__)
 
 char *FilePas;
-int *TabLexeme;
+int lexeme;
 
 void AcceptLex (const int attendu, const char *File, const int Line)
 {
@@ -64,8 +30,16 @@ void AcceptLex (const int attendu, const char *File, const int Line)
 		exit (1);
 	}
 	printf ("%d\n", lexeme);
-	TabLexeme = yylex();
+	lexeme = yylex();
 } // Accept()
+
+void ErreurLex (const int attendu, const char *File, const int Line)
+{
+		printf ("Error in file %s:%d[%s:%d]\nReceived: %s\n",
+				FilePas, LinePas, File, Line, yytext);
+		exit (1);
+
+} // Erreur ()
 
 void ProgrammePascal ()
 {
@@ -90,6 +64,8 @@ void Body ()
 		DeclarationProcFun ();
 		Accept (';');
 	}
+	else
+		Erreur (lexeme);
 
 	Body();
 } // Body()
@@ -100,6 +76,8 @@ void DeclarationProcFun ()
 		DeclarationFonction ();
 	else if (PROCEDURE == lexeme)
 		DeclarationProcedure ();
+	else
+		Erreur (lexeme);
 
 } // DeclarationProcFun ()
 
@@ -142,6 +120,8 @@ void ListeParametres ()
 			ListeParametres ();
 		}
 	}
+	else 
+		Erreur (lexeme);
 
 } // ListeParametres ()
 
@@ -154,25 +134,35 @@ void DeclarationVariable ()
 	}
 	else if (BEGIN == lexeme || PROCEDURE == lexeme || FUNCTION == lexeme)
 		return;
+	else
+		Erreur (lexeme);
 
 } // DeclarationVariable ()
 
 void CorpsDeclVariable ()
 {
-	ListeID ();
-	Accept (':');
-	Type ();
-	Accept (';');
-	SuiteDeclVariable ();
+	if (IDENTIFIANT == lexeme)
+	{
+		ListeID ();
+		Accept (':');
+		Type ();
+		Accept (';');
+		SuiteDeclVariable ();
+	}
+	else
+		Erreur (lexeme);
 
 } // CorpsDeclVariable ()
 
 void SuiteDeclVariable ()
 {
-	if (VAR == lexeme)
+	if (VAR == lexeme || FUNCTION == lexeme || PROCEDURE == lexeme ||
+		BEGIN == lexeme)
 		DeclarationVariable ();
 	else if (IDENTIFIANT == lexeme)
 		CorpsDeclVariable ();
+	else
+		Erreur (lexeme);
 
 } // SuiteDeclVariale ()
 
@@ -203,12 +193,17 @@ void Type ()
 	}
 	else if (INTEGER == lexeme || BOOL == lexeme)
 		TypeSimple ();
+	else
+		Erreur (lexeme);
 
 } // Type ()
 
 void TypeSimple ()
 {
-	Accept (lexeme);
+	if (INTEGER == lexeme || BOOL == lexeme)
+		Accept (lexeme);
+	else
+		Erreur (lexeme);
 } // TypeSimple ()
 
 void Instruction ()
@@ -227,6 +222,8 @@ void Instruction ()
 		else
 			Affectation ();
 	}
+	else
+		Erreur(lexeme);
 
 } // Instruction ()
 
@@ -298,6 +295,8 @@ void ListeArguments ()
 	}
 	else if (')' == lexeme)
 		return;
+	else 
+		Erreur (lexeme);
 
 } // ListeArguments ()
 
@@ -317,6 +316,9 @@ void Signe ()
 		Accept ('-');
 	else if ('+' == lexeme)
 		Accept ('+');
+	else
+		Erreur (lexeme);
+
 } // Signe ()
 
 void Addition ()
@@ -325,6 +327,8 @@ void Addition ()
 		Accept ('-');
 	else if ('+' == lexeme)
 		Accept ('+');
+	else
+		Erreur (lexeme);
 
 } // Addition ()
 
@@ -336,6 +340,8 @@ void Multiplication ()
 		Accept (DIV);
 	else if (MOD == lexeme)
 		Accept (MOD);
+	else
+		Erreur (lexeme);
 
 } // Multiplication ()
 
@@ -353,6 +359,8 @@ void OperateurRelationnel ()
 		Accept (INFEGAL);
 	else if (DIFFERENT == lexeme)
 		Accept (DIFFERENT);
+	else
+		Erreur (lexeme);
 
 } // OperateurRelationnel ()
 
@@ -362,6 +370,8 @@ void Boolean ()
 		Accept (TRUE);
 	else if (FALSE == lexeme)
 		Accept (FALSE);
+	else
+		Erreur (lexeme);
 
 } // Boolean ()
 
@@ -451,6 +461,8 @@ void Facteur ()
 	}
 	else if (NOMBRE == lexeme)
 		Accept (NOMBRE);
+	else
+		Erreur (lexeme);
 
 } // Facteur ()
 
@@ -489,11 +501,9 @@ int main (int argc, char *argv[])
 		exit (1);
 	}
 	FilePas = argv[1];
-	TabLexeme = (int *) malloc (2 * sizeof(int));
 
 	yyin = fopen (argv[1], "r");
-	TabLexeme = yylex ();
+	lexeme = yylex ();
 	ProgrammePascal ();
-	//free (TabLexeme);
 	fclose (yyin);
 } // main()
