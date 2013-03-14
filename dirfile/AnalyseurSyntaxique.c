@@ -1,5 +1,7 @@
 /**
- * 
+ *
+ * @file: AnalyseurSyntaxique.c
+ *
  * @Author: lublud
  *
  * @Date: 21/2/13
@@ -14,6 +16,7 @@
 #include <ctype.h>
 
 #include "AnalyseurLex.c"
+#include "StructArbreSyntaxique.h"
 
 #define Accept(attendu) AcceptLex(attendu, __FILE__, __LINE__)
 #define Erreur(attendu) ErreurLex(attendu, __FILE__, __LINE__)
