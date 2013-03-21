@@ -44,73 +44,121 @@ void ErreurLex (const int attendu, const char *File, const int Line)
 
 } // Erreur ()
 
-void ProgrammePascal ()
+SNoeud * ProgrammePascal ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = PROGRAM;
 	Accept (PROGRAM);
+
+	Noeud->Fils1.Nom = CreerChaine (yytext)
 	Accept (IDENTIFIANT);
+
 	Accept (';');
-	Body ();
+	Noeud->Fils2.Fils = Body ();
 	Accept ('.');
+
+	return Noeud;
 } // ProgrammePascal ()
 
-void Body ()
+SNoeud * Body ()
 {
-	if (BEGIN == lexeme)
-	{
-		Bloc ();
-		return;
-	}
-	else if (VAR == lexeme)
-		DeclarationVariable ();
-	else if (FUNCTION == lexeme || PROCEDURE == lexeme)
-	{
-		DeclarationProcFun ();
-		Accept (';');
-	}
-	else
-		Erreur (lexeme);
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
 
-	Body();
+	for (;;)
+		if (BEGIN == lexeme)
+		{
+			Noeud->Type = BEGIN;
+			Noeud->Fils1.Fils = Bloc ();
+			break;
+		}
+		else if (VAR == lexeme)
+		{
+			Noeud->Type = VAR;
+			Noeud->Fils1.Fils = DeclarationVariable ();
+		}
+		else if (FUNCTION == lexeme || PROCEDURE == lexeme)
+		{
+			Noeud->Type = lexeme;
+			Noeud->Fils1.Fils = DeclarationProcFun ();
+			Accept (';');
+		}
+		else
+			Erreur (lexeme);
+
+	return Noeud;
 } // Body()
 
-void DeclarationProcFun ()
+SNoeud * DeclarationProcFun ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	if (FUNCTION == lexeme)
-		DeclarationFonction ();
+	{
+		Noeud->Type = FUNCTION;
+		Noeud->Fils1.Fils = DeclarationFonction ();
+	}
 	else if (PROCEDURE == lexeme)
-		DeclarationProcedure ();
+	{
+		Noeud->Type = PROCEDURE;
+		Noeud->Fils1.Fils = DeclarationProcedure ();
+	}
 	else
 		Erreur (lexeme);
+
+	return Noeud;
 
 } // DeclarationProcFun ()
 
-void DeclarationFonction ()
+SNoeud * DeclarationFonction ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	Accept (FUNCTION);
+	Noeud->Type = FUNCTION;
+
+	Noeud->Fils1.Nom = CreerChaine (yytext);
 	Accept (IDENTIFIANT);
+
 	Accept ('(');
-	ListeParametres ();
+	Noeud->Fils2.Fils = ListeParametres ();
+
 	Accept (')');
 	Accept (':');
-	Type ();
+	Noeud->Fils3.Fils = Type ();
+
 	Accept (';');
-	Body ();
+	Noeud->Fils4.Fils = Body ();
+
+	return Noeud;
 
 } // DeclarationFonction ()
 
-void DeclarationProcedure ()
+SNoeud * DeclarationProcedure ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = PROCEDURE;
 	Accept (PROCEDURE);
+
+	Noeud->Fils1.Nom = yytext;
 	Accept (IDENTIFIANT);
 	Accept ('(');
-	ListeParametres ();
+	Noeud->Fils2.Fils = ListeParametres ();
 	Accept (')');
 	Accept (';');
-	Body ();
+	Noeud->Fils3.Fils = Body ();
+
+	return Noeud;
 
 } // DeclarationProcedure ()
 
-void ListeParametres ()
+SNoeud * ListeParametres ()
 {
 	if (IDENTIFIANT == lexeme)
 	{
@@ -128,7 +176,7 @@ void ListeParametres ()
 
 } // ListeParametres ()
 
-void DeclarationVariable ()
+SNoeud * DeclarationVariable ()
 {
 	if (VAR == lexeme)
 	{
@@ -142,7 +190,7 @@ void DeclarationVariable ()
 
 } // DeclarationVariable ()
 
-void CorpsDeclVariable ()
+SNoeud * CorpsDeclVariable ()
 {
 	if (IDENTIFIANT == lexeme)
 	{
@@ -157,7 +205,7 @@ void CorpsDeclVariable ()
 
 } // CorpsDeclVariable ()
 
-void SuiteDeclVariable ()
+SNoeud * SuiteDeclVariable ()
 {
 	if (VAR == lexeme || FUNCTION == lexeme || PROCEDURE == lexeme ||
 		BEGIN == lexeme)
@@ -169,7 +217,7 @@ void SuiteDeclVariable ()
 
 } // SuiteDeclVariale ()
 
-void ListeID ()
+SNoeud * ListeID ()
 {
 	Accept (IDENTIFIANT);
 	if (',' == lexeme)
@@ -180,7 +228,7 @@ void ListeID ()
 
 } // ListeID ()
 
-void Type ()
+SNoeud * Type ()
 {
 	if (ARRAY == lexeme)
 	{
@@ -201,7 +249,7 @@ void Type ()
 
 } // Type ()
 
-void TypeSimple ()
+SNoeud * TypeSimple ()
 {
 	if (INTEGER == lexeme || BOOL == lexeme)
 		Accept (lexeme);
@@ -209,7 +257,7 @@ void TypeSimple ()
 		Erreur (lexeme);
 } // TypeSimple ()
 
-void Instruction ()
+SNoeud * Instruction ()
 {
 	if (WHILE == lexeme)
 		WhileDo ();
@@ -230,7 +278,7 @@ void Instruction ()
 
 } // Instruction ()
 
-void ListeInstructions ()
+SNoeud * ListeInstructions ()
 {
 
 	if (END == lexeme)
@@ -245,7 +293,7 @@ void ListeInstructions ()
 
 } // ListeInstructions ()
 
-void WhileDo ()
+SNoeud * WhileDo ()
 {
 	Accept (WHILE);
 	Expression ();
@@ -254,7 +302,7 @@ void WhileDo ()
 
 } // WhileDo ()
 
-void IfThenElse ()
+SNoeud * IfThenElse ()
 {
 	Accept (IF);
 	Expression ();
@@ -268,14 +316,14 @@ void IfThenElse ()
 
 } // IfThenElse ()
 
-void Affectation ()
+SNoeud * Affectation ()
 {
 	Variable ();
 	Accept (AFFECTATION);
 	Expression ();
 } // Affectation ()
 
-void AppelProcedure ()
+SNoeud * AppelProcedure ()
 {
 	// Je ne met pas le IDENTIFIANT que j'ai déjà lu dans Instruction ()
 	Accept ('(');
@@ -283,7 +331,7 @@ void AppelProcedure ()
 	Accept (')');
 } // AppelProcedure ()
 
-void ListeArguments ()
+SNoeud * ListeArguments ()
 {
 	if ('-' == lexeme || '+' == lexeme || NOT == lexeme ||
 		'(' == lexeme || TRUE == lexeme || FALSE == lexeme ||
@@ -303,14 +351,14 @@ void ListeArguments ()
 
 } // ListeArguments ()
 
-void Bloc ()
+SNoeud * Bloc ()
 {
 	Accept (BEGIN);
 	ListeInstructions ();
 	Accept (END);
 } // Bloc ()
 
-void Signe ()
+SNoeud * Signe ()
 {
 	if (IDENTIFIANT == lexeme || '(' == lexeme || NOMBRE == lexeme ||
 		TRUE == lexeme || FALSE == lexeme)
@@ -324,7 +372,7 @@ void Signe ()
 
 } // Signe ()
 
-void Addition ()
+SNoeud * Addition ()
 {
 	if ('-' == lexeme)
 		Accept ('-');
@@ -335,7 +383,7 @@ void Addition ()
 
 } // Addition ()
 
-void Multiplication ()
+SNoeud * Multiplication ()
 {
 	if ('*' == lexeme)
 		Accept ('*');
@@ -348,7 +396,7 @@ void Multiplication ()
 
 } // Multiplication ()
 
-void OperateurRelationnel ()
+SNoeud * OperateurRelationnel ()
 {
 	if ('<' == lexeme)
 		Accept ('<');
@@ -367,7 +415,7 @@ void OperateurRelationnel ()
 
 } // OperateurRelationnel ()
 
-void Boolean ()
+SNoeud * Boolean ()
 {
 	if (TRUE == lexeme)
 		Accept (TRUE);
@@ -378,7 +426,7 @@ void Boolean ()
 
 } // Boolean ()
 
-void Expression ()
+SNoeud * Expression ()
 {
 	Conjonction ();
 	if (OR == lexeme)
@@ -388,7 +436,7 @@ void Expression ()
 	}
 } // Expression ()
 
-void Conjonction ()
+SNoeud * Conjonction ()
 {
 	Comparaison ();
 	if (AND == lexeme)
@@ -398,7 +446,7 @@ void Conjonction ()
 	}
 } // Conjonction ()
 
-void Comparaison ()
+SNoeud * Comparaison ()
 {
 	if (NOT == lexeme)
 		Accept (NOT);
@@ -406,7 +454,7 @@ void Comparaison ()
 	SuiteComparaison ();
 } // Comparaison ()
 
-void SuiteComparaison ()
+SNoeud * SuiteComparaison ()
 {
 	if (AND == lexeme || OR == lexeme  || ')' == lexeme ||
 		',' == lexeme || ']' == lexeme || ';' == lexeme ||
@@ -417,7 +465,7 @@ void SuiteComparaison ()
 	ExpressionArithmetique ();
 } // SuiteComparaison ()
 
-void ExpressionArithmetique ()
+SNoeud * ExpressionArithmetique ()
 {
 	Signe ();
 	Terme ();
@@ -429,7 +477,7 @@ void ExpressionArithmetique ()
 
 } // ExpressionArithmetique ()
 
-void Terme ()
+SNoeud * Terme ()
 {
 	Facteur ();
 	if ('*' == lexeme || DIV == lexeme || MOD == lexeme)
@@ -440,7 +488,7 @@ void Terme ()
 
 } // Terme ()
 
-void Facteur ()
+SNoeud * Facteur ()
 {
 	if ('(' == lexeme)
 	{
@@ -469,7 +517,7 @@ void Facteur ()
 
 } // Facteur ()
 
-void ListeExpressions ()
+SNoeud * ListeExpressions ()
 {
 	if (')' == lexeme)
 		return;
@@ -483,7 +531,7 @@ void ListeExpressions ()
 
 } // ListeExpressions ()
 
-void Variable ()
+SNoeud * Variable ()
 {
 	// Je ne met pas le IDENTIFIANT que j'ai déjà lu dans Instruction ()
 	if ('[' == lexeme)
@@ -505,8 +553,10 @@ int main (int argc, char *argv[])
 	}
 	FilePas = argv[1];
 
+	SNoeud *Racine = CreerNoeud ();
+
 	yyin = fopen (argv[1], "r");
 	lexeme = yylex ();
-	ProgrammePascal ();
+	Racine = ProgrammePascal ();
 	fclose (yyin);
 } // main()

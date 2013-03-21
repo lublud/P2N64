@@ -31,5 +31,20 @@ SNoeud *CreerNoeud ()
 	return p;
 } // CreerNoeud ()
 
+char *CreerChaine (char *chaine)
+{
+	char *c;
+	c = (char *) malloc (strlen (chaine) + 1);
+
+	if (NULL == c)
+	{
+		fprintf (stderr, "Error malloc\n");
+		exit (EXIT_FAILURE);
+	}
+
+	c = strcpy (c, chaine);
+	return c;
+} // CreerChaine ()
+
 #endif /* __STRUCTARBRESYNTAXIQUE_HXX__ */
 
