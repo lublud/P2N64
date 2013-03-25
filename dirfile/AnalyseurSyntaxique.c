@@ -93,23 +93,17 @@ SNoeud * Body ()
 
 SNoeud * DeclarationProcFun ()
 {
-	SNoeud *Noeud;
-	Noeud = CreerNoeud ();
-
 	if (FUNCTION == lexeme)
 	{
-		Noeud->Type = FUNCTION;
-		Noeud->Fils1.Fils = DeclarationFonction ();
+		return DeclarationFonction ();
 	}
 	else if (PROCEDURE == lexeme)
 	{
-		Noeud->Type = PROCEDURE;
-		Noeud->Fils1.Fils = DeclarationProcedure ();
+		return DeclarationProcedure ();
 	}
 	else
 		Erreur (lexeme);
 
-	return Noeud;
 
 } // DeclarationProcFun ()
 
@@ -160,48 +154,68 @@ SNoeud * DeclarationProcedure ()
 
 SNoeud * ListeParametres ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	if (IDENTIFIANT == lexeme)
 	{
-		ListeID ();
+		Noeud = ListeID ();
 		Accept (':');
-		Type ();
+		Noeud->Fils3.Fils = Type ();
+		Noeud->Type = Noeud->Fils3.Fils->Type;
 		if (';' == lexeme)
 		{
 			Accept (';');
-			ListeParametres ();
+			Noeud->Fils4.Frere = ListeParametres ();
 		}
+		else
+			break;
 	}
-	else 
+	else
 		Erreur (lexeme);
+
+	return Noeud;
 
 } // ListeParametres ()
 
 SNoeud * DeclarationVariable ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	if (VAR == lexeme)
 	{
+		Noeud->Type = VAR;
 		Accept (VAR);
-		CorpsDeclVariable ();
+		Noeud->Fils1.Fils = CorpsDeclVariable ();
 	}
 	else if (BEGIN == lexeme || PROCEDURE == lexeme || FUNCTION == lexeme)
-		return;
+		return Noeud;
 	else
 		Erreur (lexeme);
+
+	return Noeud;
 
 } // DeclarationVariable ()
 
 SNoeud * CorpsDeclVariable ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	if (IDENTIFIANT == lexeme)
 	{
-		ListeID ();
+		Noeud = ListeID ();
 		Accept (':');
-		Type ();
+		Noeud->Fils3.Fils = Type ();
+		Noeud->Type = Noeud->Fils3.Fils->Type;
 		Accept (';');
-		SuiteDeclVariable ();
+		Noeud->Fils4.Frere = SuiteDeclVariable ();
 	}
 	else
 		Erreur (lexeme);
+
+	return Noeud;
 
 } // CorpsDeclVariable ()
 
@@ -209,9 +223,10 @@ SNoeud * SuiteDeclVariable ()
 {
 	if (VAR == lexeme || FUNCTION == lexeme || PROCEDURE == lexeme ||
 		BEGIN == lexeme)
-		DeclarationVariable ();
+		return DeclarationVariable ();
 	else if (IDENTIFIANT == lexeme)
-		CorpsDeclVariable ();
+		return CorpsDeclVariable ();
+	}
 	else
 		Erreur (lexeme);
 
@@ -219,36 +234,58 @@ SNoeud * SuiteDeclVariable ()
 
 SNoeud * ListeID ()
 {
-	Accept (IDENTIFIANT);
-	if (',' == lexeme)
-	{
-		Accept (',');
-		ListeID ();
-	}
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+		Noeud->Fils1.Nom = CreerChaine(yytext);
+		Accept (IDENTIFIANT);
+		if (',' == lexeme)
+		{
+			Noeud->Fils2.Frere = ListeID ();
+			Accept (',');
+		}
+
+	return Noeud;
 
 } // ListeID ()
 
 SNoeud * Type ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
 	if (ARRAY == lexeme)
 	{
+		Noeud->Type = ARRAY;
 		Accept (ARRAY);
 		Accept ('[');
+		Noeud->Fils1.Nombre = atoi (yytext);
 		Accept (NOMBRE);
 		Accept (BORNETABLEAU);
+		Noeud->Fils2.Nombre = atoi (yytext);
 		Accept (NOMBRE);
 		Accept (']');
 		Accept (OF);
+
 		if (INTEGER == lexeme || BOOL == lexeme)
-			TypeSimple ();
+		{
+			Noeud->Fils3.Nombre = lexeme;
+			Accept (lexeme);
+		}
+		else
+			Erreur (lexeme);
 	}
 	else if (INTEGER == lexeme || BOOL == lexeme)
-		TypeSimple ();
+	{
+		Noeud->Type = lexeme;
+		Accept (lexeme);
+	}
 	else
 		Erreur (lexeme);
 
 } // Type ()
 
+/* * /
 SNoeud * TypeSimple ()
 {
 	if (INTEGER == lexeme || BOOL == lexeme)
@@ -256,22 +293,29 @@ SNoeud * TypeSimple ()
 	else
 		Erreur (lexeme);
 } // TypeSimple ()
+/ *  */
 
 SNoeud * Instruction ()
 {
 	if (WHILE == lexeme)
-		WhileDo ();
+		return WhileDo ();
 	else if (IF == lexeme)
-		IfThenElse ();
+		return IfThenElse ();
 	else if (BEGIN == lexeme)
-		Bloc ();
+		return Bloc ();
 	else if (IDENTIFIANT == lexeme)
 	{
+		SNoeud *Noeud;
+		Noeud = CreerNoeud ();
+		char *tmp = CreerChaine (yytext);
+
 		Accept (IDENTIFIANT);
 		if ('(' == lexeme)
-			AppelProcedure ();
+			Noeud = AppelProcedure ();
 		else
-			Affectation ();
+			Noeud = Affectation ();
+		Noeud->Fils1.Nom = tmp;
+		return Noeud;
 	}
 	else
 		Erreur(lexeme);
@@ -280,74 +324,112 @@ SNoeud * Instruction ()
 
 SNoeud * ListeInstructions ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
 
 	if (END == lexeme)
-		return;
+		return Noeud;
 
-	Instruction ();
+	Noeud->Fils1.Fils = Instruction ();
 	if (';' == lexeme)
 	{
 		Accept (';');
-		ListeInstructions ();
+		Noeud->Fils2.Frere = ListeInstructions ();
 	}
+
+	return Noeud;
 
 } // ListeInstructions ()
 
 SNoeud * WhileDo ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = WHILE;
 	Accept (WHILE);
-	Expression ();
+	Noeud->Fils1.Fils = Expression ();
 	Accept (DO);
-	Instruction ();
+	Noeud->Fils2.Fils = Instruction ();
+
+	return Noeud;
 
 } // WhileDo ()
 
 SNoeud * IfThenElse ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = IF;
 	Accept (IF);
-	Expression ();
+	Noeud->Fils1.Fils = Expression ();
 	Accept (THEN);
-	Instruction ();
+	Noeud->Fils2.Fils = Instruction ();
 	if (ELSE == lexeme)
 	{
 		Accept (ELSE);
-		Instruction ();
+		Noeud->Fils3.Fils = Instruction ();
 	}
+
+	return Noeud;
 
 } // IfThenElse ()
 
 SNoeud * Affectation ()
 {
-	Variable ();
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = AFFECTATION;
+	// Je ne met pas le IDENTIFIANT que j'ai déjà lu dans Instruction ()
+	Noeud->Fils2.Fils = Variable ();
 	Accept (AFFECTATION);
-	Expression ();
+	Noeud->Fils3.Fils = Expression ();
+
+	return Noeud;
+
 } // Affectation ()
 
 SNoeud * AppelProcedure ()
 {
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	Noeud->Type = IDENTIFIANT;
 	// Je ne met pas le IDENTIFIANT que j'ai déjà lu dans Instruction ()
 	Accept ('(');
-	ListeArguments ();
+	Noeud->Fils2.Fils = ListeArguments ();
 	Accept (')');
+
+	return Noeud;
+
 } // AppelProcedure ()
 
 SNoeud * ListeArguments ()
 {
-	if ('-' == lexeme || '+' == lexeme || NOT == lexeme ||
-		'(' == lexeme || TRUE == lexeme || FALSE == lexeme ||
-		IDENTIFIANT == lexeme || NOMBRE == lexeme)
+	SNoeud *Noeud;
+	Noeud = CreerNoeud ();
+
+	for (;;)
 	{
-		Expression ();
-		if (',' == lexeme)
+		if ('-' == lexeme || '+' == lexeme || NOT == lexeme ||
+				'(' == lexeme || TRUE == lexeme || FALSE == lexeme ||
+				IDENTIFIANT == lexeme || NOMBRE == lexeme)
 		{
-			Accept (',');
-			ListeArguments ();
+			Noeud = Expression ();
+			if (',' == lexeme)
+				Accept (',');
+			else
+				break;
 		}
+		else if (')' == lexeme)
+			return Noeud;
+		else 
+			Erreur (lexeme);
 	}
-	else if (')' == lexeme)
-		return;
-	else 
-		Erreur (lexeme);
+
+	return Noeud;
 
 } // ListeArguments ()
 
