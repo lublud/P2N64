@@ -17,6 +17,9 @@
 #include <ctype.h>
 
 #include "StructArbreSyntaxique.h"
+#include "StructTableSymboles.h"
 #include "DeclarationFonctionAnalyseurSyntaxique.h"
+#include "DeclarationVariablesGlobales.h"
 
 #include "../dirfile/AnalyseurLex.c"
+#include "../dirfile/AnalyseurSyntaxique.c"

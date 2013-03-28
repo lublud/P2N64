@@ -11,58 +11,6 @@
  *
 **/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-#define PROGRAM 256
-#define IDENTIFIANT 257
-#define NOMBRE 258
-#define DIFFERENT 259
-#define INFEGAL 260
-#define SUPEGAL 261
-#define AFFECTATION 262
-#define BORNETABLEAU 263 // correspond au .. lors de la création 
-						 // d'un tableau array[0..1] tableau entre 0 et 1.
-#define DIV 264 // division entière !
-#define MOD 265
-#define OR 266
-#define AND 267
-#define NOT 268
-#define VAR 269
-#define INTEGER 270
-#define BOOL 271
-#define TRUE 272
-#define FALSE 273
-#define PROCEDURE 274
-#define FUNCTION 275
-#define BEGIN 276
-#define END 277
-#define WHILE 278
-#define DO 279
-#define IF 280
-#define THEN 281
-#define ELSE 282
-#define READLN 283
-#define WRITELN 284
-#define ARRAY 285
-#define OF 286
-
-enum
-{
-	FIRSTCHAR = 0,
-	DIGIT,
-	CHAR,
-	DPOINT,
-	POINT,
-	INF,
-	SUP
-};
-
-FILE *yyin;
-char yytext[1024];
-int LinePas = 1;
 
 int isotherchar (int c)
 {
@@ -223,19 +171,3 @@ int yylex()
 		}
 	}
 } // yylex()
-
-//int main (int argc, char *argv[])
-//{
-//	
-//	int lexeme;
-//	if (1 + 1 != argc)
-//	{
-//		printf ("You're a n00b, expected only one argument");
-//		exit (1);
-//	}
-//
-//	yyin = fopen (argv[1], "r");
-//	for (lexeme = yylex(); EOF != lexeme; lexeme = yylex())
-//		printf ("%d\n", lexeme);
-//	fclose (yyin);
-//} // main()

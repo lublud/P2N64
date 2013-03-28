@@ -14,7 +14,6 @@
 //#include "StructArbreSyntaxique.h"
 
 SNoeud *ProgrammePascal ();
-SNoeud *ProgrammePascal ();
 SNoeud *Body ();
 SNoeud *DeclarationProcFun ();
 SNoeud *DeclarationFonction ();
