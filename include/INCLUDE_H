@@ -1,0 +1,14 @@
+#/**
+#*
+#* @author: lublud
+#*
+#* @file: INCLUDE_H
+#*
+#* @synopsis: fichier des macros pour le makefile
+#*
+#**/
+#
+INCLUDE = ../include
+#
+#
+CCSP_H = $(INCLUDE)/StructArbreSyntaxique.h

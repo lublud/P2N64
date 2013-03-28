@@ -1,6 +1,6 @@
 /**
  *
- * @file: StructArbreSyntaxique
+ * @file: StructArbreSyntaxique.h
  *
  * @author: lublud
  *
@@ -31,6 +31,9 @@ typedef struct SNoeud
 	union MyUnion Fils3;
 	union MyUnion Fils4;
 } SNoeud;
+
+extern SNoeud *CreerNoeud ();
+extern char *CreerChaine (char *chaine);
 
 #include "StructArbreSyntaxique.hxx"
 #endif /* __STRUCTARBRESYNTAXIQUE_H__ */
