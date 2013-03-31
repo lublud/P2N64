@@ -13,13 +13,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
+#include "DeclarationVariablesGlobales.h"
 #include "StructArbreSyntaxique.h"
 #include "StructTableSymboles.h"
 #include "DeclarationFonctionAnalyseurSyntaxique.h"
-#include "DeclarationVariablesGlobales.h"
 
 #include "../dirfile/AnalyseurLex.c"
 #include "../dirfile/AnalyseurSyntaxique.c"

@@ -17,14 +17,14 @@
 
 typedef struct SElement
 {
-	char Nom[128];
+	char *Nom;
 	int Type;
 	int IndiceDebut;
 	int IndiceFin;
 	int Adresse;
 } SElement;
 
-extern SElement AjoutElement (char Nom[], int Type, int IndiceDebut, IndiceFin, Adresse);
+extern SElement *AjoutElement (char *Nom, int Type, int IndiceDebut, int IndiceFin, int Adresse);
 
 #include "StructTableSymboles.hxx"
 #endif /* __STRUCTTABLESYMBOLES_H__ */

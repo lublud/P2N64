@@ -15,8 +15,9 @@
 #if ! defined __STRUCTTABLESYMBOLES_HXX__
 #define 	  __STRUCTTABLESYMBOLES_HXX__
 
+#include "StructTableSymboles.h"
 
-SElement AjoutElement (char Nom[], int Type, int IndiceDebut, IndiceFin, Adresse)
+SElement *AjoutElement (char *Nom, int Type, int IndiceDebut, int IndiceFin, int Adresse)
 {
 	SElement *elem;
 	elem->Nom = Nom;
@@ -29,6 +30,4 @@ SElement AjoutElement (char Nom[], int Type, int IndiceDebut, IndiceFin, Adresse
 
 } // AjoutElement ()
 
-#include "StructTableSymboles.h"
 #endif /* __STRUCTTABLESYMOBLES_HXX__ */
-
