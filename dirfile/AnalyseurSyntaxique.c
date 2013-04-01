@@ -171,7 +171,7 @@ SNoeud *ListeParametres ()
 
 	if (IDENTIFIANT == lexeme)
 	{
-		Noeud = ListeID ();
+		Noeud = ListeID (PARAMETRE);
 		Accept (':');
 
 		if (ARRAY == lexeme)
@@ -233,7 +233,7 @@ SNoeud *CorpsDeclVariable ()
 
 	if (IDENTIFIANT == lexeme)
 	{
-		Noeud = ListeID ();
+		Noeud = ListeID (ID);
 		Accept (':');
 
 		if (ARRAY == lexeme)
@@ -273,7 +273,7 @@ SNoeud *SuiteDeclVariable ()
 
 } // SuiteDeclVariale ()
 
-SNoeud *ListeID ()
+SNoeud *ListeID (int TypeAppelant)
 {
 	SNoeud *Noeud;
 	Noeud = CreerNoeud ();
@@ -284,7 +284,8 @@ SNoeud *ListeID ()
 	if (',' == lexeme)
 	{
 		Accept (',');
-		Noeud->Fils2.Frere = ListeID ();
+		Noeud->Fils2.Frere = ListeID (TypeAppelant);
+		Noeud->Fils2.Frere->Type = TypeAppelant;
 		Noeud->TypeF2 = TYPE_SNOEUDFRERE;
 	}
 

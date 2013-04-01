@@ -56,6 +56,9 @@ void CreationFichierDot (char *pathname, SNoeud *Racine)
 {
 	char buf[128];
 	int fd;
+	unsigned i;
+	char *LabelDot;
+	char *IDLabel;
 
 	sprintf (buf, "digraph ArbreSyntaxique\n{\n");
 
@@ -81,10 +84,10 @@ void CreationFichierDot (char *pathname, SNoeud *Racine)
 		perror ("open ()");
 		exit (1);
 	}
+	LabelDot = (char *) malloc (256);
+	IDLabel = (char *) malloc (256);
 
-	unsigned i;
-	char *LabelDot = (char *) malloc (256);
-	char *IDLabel = (char *) malloc (256);
+
 	for (i = 0; NULL != TabType[i]; ++i)
 	{
 		if (1000 == TabType[i])
@@ -170,7 +173,7 @@ void CreationFichierDot (char *pathname, SNoeud *Racine)
 		else
 			sprintf (IDLabel, "%c", TabType[i]);
 
-		sprintf (LabelDot, "\"%d_%d\" [label=\"%s\"];\n", TabType[i], TabDiffSuivant[i], IDLabel);
+		sprintf (LabelDot, "\t\"%d_%d\" [label=\"%s\"];\n", TabType[i], TabDiffSuivant[i], IDLabel);
 		if (write (fd, LabelDot, strlen (LabelDot)) < 0)
 		{
 			perror ("write ()");
@@ -210,849 +213,266 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 		exit (1);
 	}
 
-	if (PRGM == Racine->Type)
+	if (TYPE_SNOEUDFILS == Racine->TypeF1)
 	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit (1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // PRGM
-	else if (BODY == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		if (NULL != Racine->Fils1.Fils)
-		{
-			if (isalpha (Racine->Fils1.Fils->Fils1.Nom[0]))
-				sprintf (Suivant, "%s_%d", Racine->Fils1.Fils->Fils1.Nom, ++DiffSuivant);
-			else
-				sprintf (Suivant, "NULL_%d", ++DiffSuivant);
-
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit (1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-			strcpy (Precedent, tmp);
-		}
-
-		if (NULL == Racine->Fils2.Frere)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit (1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // BODY
-	else if (DECLFUNC == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		//sprintf (buf, "\t\"DECLARATION FONCTION | %s\" -> PARAMETRE\n", Racine->Fils1.Nom);
-
-		sprintf (Suivant, "PARAMETRE_%d", ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (TYPE_SNOEUDFILS == Racine->TypeF3)
-		{
-			sprintf (Suivant, "ARRAY_%d", ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-			strcpy (Precedent, tmp);
-		}
-		else
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils3.Nombre, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils3.Nombre;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-		}
-
-		sprintf (Suivant, "%d_%d", Racine->Fils4.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils4.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} //DECLFUNC
-	else if (DECLPROC == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "PARAMETRE_%d", ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		sprintf (Suivant, "%d_%d", Racine->Fils3.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // DECLPROC
-	else if (DECLVAR == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		if (NULL == Racine->Fils1.Fils)
-			return;
-
 		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
 		TabDiffSuivant[iterator] = DiffSuivant;
 		TabType[iterator++] = Racine->Fils1.Fils->Type;
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
-		strcpy (tmp, Precedent);
 		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
 
-	} // DECLVAR
-	else if (PARAMETRE == Racine->Type)
+	}
+	else if (TYPE_SNOEUDFRERE == Racine->TypeF1)
 	{
 		strcpy (Precedent, Courant);
+		sprintf (Suivant, "%d_%d", Racine->Fils1.Frere->Type, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
+		TabDiffSuivant[iterator] = DiffSuivant;
+		TabType[iterator++] = Racine->Fils1.Frere->Type;
+
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+		strcpy (tmp, Precedent);
+		CreationArbreDot (pathname, Racine->Fils1.Frere, Suivant);
+		strcpy (Precedent, tmp);
+
+	}
+	else if (TYPE_INT == Racine->TypeF1)
+	{
+		sprintf (Suivant, "%d_%d", Racine->Fils1.Nombre, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils1.Nombre;
+		}
+
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+
+	}
+	else if (TYPE_NOM == Racine->TypeF1)
+	{
 		sprintf (Suivant, "%s_%d", Racine->Fils1.Nom, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
 
-		if (NULL != Racine->Fils2.Frere)
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-			sprintf (buf, "\t%s-> \"%s\";\n", Precedent, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils2.Frere->Type;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-			strcpy (Precedent, tmp);
-		}
+	}
 
-		if (TYPE_SNOEUDFILS == Racine->TypeF3)
-		{
-			sprintf (Suivant, "ARRAY_%d", ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-			strcpy (Precedent, tmp);
-		}
-		else
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils3.Nombre, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils3.Nombre;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-		}
-
-		if (NULL == Racine->Fils4.Frere)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils4.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils4.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // PARAMETRE
-	else if (INSTRUCTION == Racine->Type)
+	if (TYPE_SNOEUDFILS == Racine->TypeF2)
 	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
+		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
 		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
+		TabType[iterator++] = Racine->Fils2.Fils->Type;
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
+		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
 
-		if (NULL == Racine->Fils2.Frere)
-			return;
-
+	}
+	else if (TYPE_SNOEUDFRERE == Racine->TypeF2)
+	{
+		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
 		TabDiffSuivant[iterator] = DiffSuivant;
 		TabType[iterator++] = Racine->Fils2.Frere->Type;
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
 		strcpy (tmp, Precedent);
 		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
 		strcpy (Precedent, tmp);
 
-	} // INSTRUCTION
-	else if (WHILEDO == Racine->Type)
+	}
+	else if (TYPE_INT == Racine->TypeF2)
 	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // WHILEDO
-	else if (IFTHENELSE == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils3.Fils)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils3.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // IFTHENELSE
-	else if (AFF == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		sprintf (Suivant, "%d_%d", Racine->Fils3.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // AFF
-	else if (APPELPROC == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // APPELPROC
-	else if (ARGUMENTS == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils2.Frere)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // ARGUMENTS
-	else if (BLOC == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // BLOC
-	else if (ID == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%s_%d",  Racine->Fils1.Nom, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-
-		if (NULL != Racine->Fils2.Frere)
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-			sprintf (buf, "\t%s-> \"%s\";\n", Precedent, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils2.Frere->Type;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-			strcpy (Precedent, tmp);
-		}
-
-		if (TYPE_SNOEUDFILS == Racine->TypeF3)
-		{
-			sprintf (Suivant, "ARRAY_%d", ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
-			strcpy (Precedent, tmp);
-		}
-		else
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils3.Nombre, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils3.Nombre;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-		}
-
-		sprintf (Suivant, "%d_%d", Racine->Fils4.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils4.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // ID
-	else if (EXPRESSION == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils2.Frere)
-			return;
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // EXPRESSION
-	else if (CONJONCTION == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils2.Frere)
-			return;
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // CONJONCTION
-	else if (COMPARAISON == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // COMPARAISON
-	else if (SUITECOMPARAISON == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		if (NULL == Racine->Fils1.Nombre)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Nombre, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Nombre;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-	} //SUITECOMPARAISON
-	else if (EXPRARITH == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Nombre, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Nombre;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils3.Nombre)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils3.Nombre, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Nombre;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-
-		sprintf (Suivant, "%d_%d", Racine->Fils4.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Frere->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils4.Frere, Suivant);
-		strcpy (Precedent, tmp);
-
-	} // EXPRARITH
-	else if (TERME == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
-		if (write (fd, buf, strlen (buf)) < 0)
-		{
-			perror ("write ()");
-			exit(1);
-		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
-
-		if (NULL == Racine->Fils2.Nombre)
-			return;
-
 		sprintf (Suivant, "%d_%d", Racine->Fils2.Nombre, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Nombre;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils2.Nombre;
+		}
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
 
+	}
+	else if (TYPE_NOM == Racine->TypeF2)
+	{
+		sprintf (Suivant, "%s_%d", Racine->Fils2.Nom, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
+
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+
+	}
+
+	if (TYPE_SNOEUDFILS == Racine->TypeF3)
+	{
+		sprintf (Suivant, "%d_%d", Racine->Fils3.Fils->Type, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
+		TabDiffSuivant[iterator] = DiffSuivant;
+		TabType[iterator++] = Racine->Fils3.Fils->Type;
+
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+		CreationArbreDot (pathname, Racine->Fils3.Fils, Suivant);
+
+	}
+	else if (TYPE_SNOEUDFRERE == Racine->TypeF3)
+	{
+		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils3.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
 		TabDiffSuivant[iterator] = DiffSuivant;
 		TabType[iterator++] = Racine->Fils3.Frere->Type;
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
 		strcpy (tmp, Precedent);
 		CreationArbreDot (pathname, Racine->Fils3.Frere, Suivant);
 		strcpy (Precedent, tmp);
 
-	} // TERME
-	else if (FACTEUR == Racine->Type)
+	}
+	else if (TYPE_INT == Racine->TypeF3)
 	{
-		strcpy (Precedent, Courant);
-		if (TYPE_INT == Racine->TypeF1)
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils1.Nombre, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-		}
-		else if (TYPE_NOM == Racine->TypeF1)
-		{
-			sprintf (Suivant, "%s_%d", Racine->Fils1.Nom, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-
-			if (NULL == Racine->Fils2.Fils)
-				return;
-
-			sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils2.Fils->Type;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils2.Fils, Suivant);
-			strcpy (Precedent, tmp);
-		}
-		else
-		{
-			sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type), ++DiffSuivant;
-			sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-			TabDiffSuivant[iterator] = DiffSuivant;
-			TabType[iterator++] = Racine->Fils1.Fils->Type;
-			if (write (fd, buf, strlen (buf)) < 0)
-			{
-				perror ("write ()");
-				exit(1);
-			}
-			strcpy (tmp, Precedent);
-			CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-			strcpy (Precedent, tmp);
-
-		}
-
-	} // FACTEUR
-	else if (LISTEEXPR == Racine->Type)
-	{
-		strcpy (Precedent, Courant);
-		if (NULL == Racine->Fils1.Fils)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
+		sprintf (Suivant, "%d_%d", Racine->Fils3.Nombre, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils3.Nombre;
+		}
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
 
-		if (NULL == Racine->Fils2.Frere)
-			return;
+	}
+	else if (TYPE_NOM == Racine->TypeF3)
+	{
+		sprintf (Suivant, "%s_%d", Racine->Fils3.Nom, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
 
-		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+
+	}
+
+	if (TYPE_SNOEUDFILS == Racine->TypeF4)
+	{
+		sprintf (Suivant, "%d_%d", Racine->Fils4.Fils->Type, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
+		TabDiffSuivant[iterator] = DiffSuivant;
+		TabType[iterator++] = Racine->Fils4.Fils->Type;
+
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+		CreationArbreDot (pathname, Racine->Fils4.Fils, Suivant);
+
+	}
+	else if (TYPE_SNOEUDFRERE == Racine->TypeF4)
+	{
+		strcpy (Precedent, Courant);
+		sprintf (Suivant, "%d_%d", Racine->Fils4.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
 		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
+		TabType[iterator++] = Racine->Fils4.Frere->Type;
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
 		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils2.Frere, Suivant);
+		CreationArbreDot (pathname, Racine->Fils4.Frere, Suivant);
 		strcpy (Precedent, tmp);
 
-	} // LISTEEXPR
-	else if (VARIABLE == Racine->Type)
+	}
+	else if (TYPE_INT == Racine->TypeF4)
 	{
-		strcpy (Precedent, Courant);
-		if (NULL == Racine->Fils1.Fils)
-			return;
-
-		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
+		sprintf (Suivant, "%d_%d", Racine->Fils4.Nombre, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils4.Nombre;
+		}
+
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
 			perror ("write ()");
-			exit(1);
+			exit (1);
 		}
-		strcpy (tmp, Precedent);
-		CreationArbreDot (pathname, Racine->Fils1.Fils, Suivant);
-		strcpy (Precedent, tmp);
 
-	} // VARIABLE
+	}
+	else if (TYPE_NOM == Racine->TypeF4)
+	{
+		sprintf (Suivant, "%s_%d", Racine->Fils4.Nom, ++DiffSuivant);
+		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
 
-	close (fd);
+		if (write (fd, buf, strlen (buf)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+
+	}
 	free (Suivant);
 	free (Precedent);
 	free (tmp);
+
+	close (fd);
 
 } // CreationArbreDot ()
 

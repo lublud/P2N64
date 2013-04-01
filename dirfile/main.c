@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 	Racine = ProgrammePascal ();
 	fclose (yyin);
 
-	printf ("Voulez vous créer l'arbre"
+	printf ("Voulez vous créer l'arbre "
 			"(GraphViz est nécessaire pour continuer...) (o/n) ");
 	scanf ("%s", Reponse);
 
