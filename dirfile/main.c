@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
 		NomFichier = (char *) malloc (256);
 		pathname = (char *) malloc (256);
 
-		printf ("Nom du fichier : ");
+		printf ("Nom du fichier (sans l'extension) : ");
 		scanf ("%s", NomFichier);
 
 		sprintf (pathname, "%s.dot", NomFichier);

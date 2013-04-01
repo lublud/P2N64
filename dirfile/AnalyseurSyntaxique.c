@@ -61,11 +61,7 @@ SNoeud *Body ()
 
 	// Recursivité
 	if (BEGIN == lexeme)
-	{
-		//Noeud->Fils1.Fils = Bloc ();
-		//return Noeud;
 		return Bloc ();
-	}
 	else if (VAR == lexeme)
 	{
 		Noeud->Fils1.Fils = DeclarationVariable ();
@@ -218,7 +214,10 @@ SNoeud *DeclarationVariable ()
 		Noeud->TypeF1 = TYPE_SNOEUDFILS;
 	}
 	else if (BEGIN == lexeme || PROCEDURE == lexeme || FUNCTION == lexeme)
+	{
+		Noeud->Type = DECLVAR;
 		return Noeud;
+	}
 	else
 		Erreur (lexeme);
 
