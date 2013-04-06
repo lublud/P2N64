@@ -194,6 +194,11 @@ SNoeud *ListeParametres ()
 			Noeud->TypeF4 = TYPE_SNOEUDFRERE;
 		}
 	}
+	else if (')')
+	{
+		Noeud->Type = PARAMETRE;
+		return Noeud;
+	}
 	else
 		Erreur (lexeme);
 
@@ -634,12 +639,16 @@ SNoeud *Comparaison ()
 	Noeud = CreerNoeud ();
 
 	if (NOT == lexeme)
+	{
 		Accept (NOT);
+		Noeud->Fils1.Nombre = NOT;
+		Noeud->TypeF1 = TYPE_INT;
+	}
 
-	Noeud->Fils1.Fils = ExpressionArithmetique ();
-	Noeud->TypeF1 = TYPE_SNOEUDFILS;
-	Noeud->Fils2.Fils = SuiteComparaison ();
+	Noeud->Fils2.Fils = ExpressionArithmetique ();
 	Noeud->TypeF2 = TYPE_SNOEUDFILS;
+	Noeud->Fils3.Fils = SuiteComparaison ();
+	Noeud->TypeF3 = TYPE_SNOEUDFILS;
 
 	Noeud->Type = COMPARAISON;
 	return Noeud;

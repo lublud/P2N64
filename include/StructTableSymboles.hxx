@@ -141,7 +141,7 @@ STableSymbole *CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 			TableCourante = TableCourante->SuivantElement;
 
 			STableSymbole *TStmp = TableCourante;
-			for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils2.Frere)
+			for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils4.Frere)
 			{
 
 				if (TYPE_SNOEUDFILS == tmp->TypeF3)
@@ -156,16 +156,26 @@ STableSymbole *CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 					TypeVariable = tmp->Fils3.Nombre;
 				}
 
-				VerifierDispoVariable (Courant->TableSymbole, tmp->Fils1.Nom);
-				TableCourante->Parametre = AjoutElementTableSymbole (tmp->Fils1.Nom, TypeVariable,
-						IndiceDebut, IndiceFin, Adresse);
-				Adresse += 4;
+				for (SNoeud *ParamMemeType = tmp; ;
+					 ParamMemeType = ParamMemeType->Fils2.Frere)
+				{
+					if (NULL == ParamMemeType->Fils1.Nom)
+						break;
+
+					VerifierDispoVariable (Courant->TableSymbole, ParamMemeType->Fils1.Nom);
+					TableCourante->Parametre = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+							TypeVariable, IndiceDebut, IndiceFin, Adresse);
+					Adresse += 4;
 
 
-				if (NULL == tmp->Fils2.Frere)
+					if (NULL == ParamMemeType->Fils2.Frere)
+						break;
+					TableCourante = TableCourante->Parametre;
+
+				}
+				if (NULL == tmp->Fils4.Frere)
 					break;
 				TableCourante = TableCourante->Parametre;
-
 			}
 
 			TableCourante = TStmp;
