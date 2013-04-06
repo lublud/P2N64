@@ -2,11 +2,11 @@
  *
  * @file: AnalyseurSyntaxique.c
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 21/2/13
+ * @date: 21/2/13
  *
- * @Synopsis: Vérifie que le programme en pascal est correct syntaxiquement
+ * @brief Vérifie que le programme en pascal est correct syntaxiquement
  *
 **/
 

@@ -6,25 +6,39 @@
  *
  * @date: 28/3/2013
  *
- * @version: V1.0
- *
- * @synopsis: Déclaration struct et union pour la création de la table des symboles.
+ * @brief Déclaration struct et union pour la création de la table des symboles.
  *
  **/
 
 #if ! defined __STRUCTTABLESYMBOLES_H__
 #define 	  __STRUCTTABLESYMBOLES_H__
 
-typedef struct SElement
+typedef struct STableSymbole
 {
 	char *Nom;
 	int Type;
 	int IndiceDebut;
 	int IndiceFin;
 	int Adresse;
-} SElement;
+	struct STableSymbole *Parametre;
+	struct STableSymbole *SuivantElement;
+} STableSymbole;
 
-extern SElement *AjoutElement (char *Nom, int Type, int IndiceDebut, int IndiceFin, int Adresse);
+typedef struct SPile
+{
+	STableSymbole *TableSymbole;
+	struct Pile *Suivant;
+} SPile;
+
+extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type,
+									int IndiceDebut, int IndiceFin, int Adresse);
+
+extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
+
+extern STableSymbole *CreationTableSymbole (SNoeud *Racine, SPile *Courant);
+extern SPile *CreationPile (SNoeud *Racine);
+extern int VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
+extern void AfficherPile (SPile *Pile);
 
 #include "StructTableSymboles.hxx"
 #endif /* __STRUCTTABLESYMBOLES_H__ */

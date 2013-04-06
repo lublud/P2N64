@@ -1,13 +1,12 @@
-
 /**
  *
  * @file: DeclarationVariablesGlobales.h
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 28/3/13
+ * @date: 28/3/13
  *
- * @Synopsis: Liste des variables globales utilisée dans les fichiers sources.
+ * @brief Liste des variables globales utilisée dans les fichiers sources.
  *
 **/
 

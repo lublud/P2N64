@@ -1,13 +1,12 @@
-
 /**
  *
  * @file: include.h
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 27/3/13
+ * @date: 27/3/13
  *
- * @Synopsis: Liste des includes utiles pour le projet
+ * @brief Liste des includes utiles pour le projet
  *
 **/
 
@@ -22,8 +21,8 @@
 
 #include "DeclarationVariablesGlobales.h"
 #include "StructArbreSyntaxique.h"
-#include "StructTableSymboles.h"
 #include "DeclarationFonctionAnalyseurSyntaxique.h"
+#include "StructTableSymboles.h"
 
 #include "../dirfile/AnalyseurLex.c"
 #include "../dirfile/AnalyseurSyntaxique.c"

@@ -6,9 +6,7 @@
  *
  * @date: 14/3/2013
  *
- * @version: V1.0
- *
- * @synopsis: Coprs des fonctions pour la création/génération de l'arbre syntaxique
+ * @brief Coprs des fonctions pour la création/génération de l'arbre syntaxique
  *
  **/
 
@@ -217,8 +215,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		sprintf (Suivant, "%d_%d", Racine->Fils1.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils1.Fils->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -233,8 +235,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils1.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils1.Frere->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils1.Frere->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -281,8 +287,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		sprintf (Suivant, "%d_%d", Racine->Fils2.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils2.Fils->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -297,8 +307,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils2.Frere->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils2.Frere->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -345,8 +359,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		sprintf (Suivant, "%d_%d", Racine->Fils3.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils3.Fils->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -361,8 +379,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils3.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils3.Frere->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils3.Frere->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -409,8 +431,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		sprintf (Suivant, "%d_%d", Racine->Fils4.Fils->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Courant, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Fils->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils4.Fils->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -425,8 +451,12 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils4.Frere->Type, ++DiffSuivant);
 		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
-		TabDiffSuivant[iterator] = DiffSuivant;
-		TabType[iterator++] = Racine->Fils4.Frere->Type;
+
+		if (FACTEUR != Racine->Type)
+		{
+			TabDiffSuivant[iterator] = DiffSuivant;
+			TabType[iterator++] = Racine->Fils4.Frere->Type;
+		}
 
 		if (write (fd, buf, strlen (buf)) < 0)
 		{
@@ -495,10 +525,10 @@ void GenerationArbre (char *pathname)
 		file = (char *) malloc (256);
 		cmd = (char *) malloc (256);
 
-		sprintf (outfile, "-o%s.png", pathname);
+		sprintf (outfile, "-o%s.svg", pathname);
 		sprintf (file, "%s.dot", pathname);
 
-		sprintf (cmd, "dot -Tpng %s  %s", outfile, file);
+		sprintf (cmd, "dot -Tsvg %s  %s", outfile, file);
 		if (system (cmd) < 0)
 		{
 			perror ("system ()");
@@ -528,7 +558,7 @@ void AffichageArbre (char *pathname)
 	if (0 == pFils) // fils
 	{
 		cmd = (char *) malloc (256);
-		sprintf (cmd, "shotwell %s", pathname);
+		sprintf (cmd, "eog %s", pathname);
 		if (system (cmd) < 0)
 		{
 			perror ("system ()");

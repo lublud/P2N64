@@ -2,11 +2,11 @@
  *
  * @file: main.c
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 28/3/13
+ * @date: 28/3/13
  *
- * @Synopsis: Programme principale du projet
+ * @brief Programme principale du projet
  *
 **/
 
@@ -21,7 +21,6 @@ int main (int argc, char *argv[])
 		exit (1);
 	}
 	FilePas = argv[1];
-
 	char Reponse[1];
 
 	SNoeud *Racine = CreerNoeud ();
@@ -54,7 +53,7 @@ int main (int argc, char *argv[])
 
 		if ('o' == Reponse[0])
 		{
-			sprintf (pathname, "%s.png", NomFichier);
+			sprintf (pathname, "%s.svg", NomFichier);
 			AffichageArbre (pathname);
 		}
 
@@ -62,6 +61,13 @@ int main (int argc, char *argv[])
 		free (pathname);
 
 	}
-	printf ("\n");
+
+	printf ("\nCréation pile ...\n");
+	SPile *Pile;
+	Pile = CreationPile (Racine);
+	AfficherPile (Pile);
+	free (Racine);
+
+	exit (0);
 
 } // main()

@@ -3,11 +3,11 @@
  *
  * @file: DeclarationFonctionAnalyseurSyntaxique.c
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 27/3/13
+ * @date: 27/3/13
  *
- * @Synopsis: Déclaration des fonctions ustilisées dans AnalyseurSyntaxique.c
+ * @brief Déclaration des fonctions ustilisées dans AnalyseurSyntaxique.c
  *
 **/
 

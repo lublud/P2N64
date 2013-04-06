@@ -6,9 +6,7 @@
  *
  * @date: 14/3/2013
  *
- * @version: V1.0
- *
- * @synopsis: Déclaration struct et union pour la création de l'arbre syntaxique
+ * @brief Déclaration struct et union pour la création de l'arbre syntaxique
  *
  **/
 

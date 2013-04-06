@@ -2,11 +2,11 @@
  *
  * @file: AnalyseurLex.c
  *
- * @Author: lublud
+ * @author: lublud
  *
- * @Date: 7/2/13
+ * @date: 7/2/13
  *
- * @Synopsis: Lire un fichier texte caractère par caractère (en pascal), 
+ * @brief Lire un fichier texte caractère par caractère (en pascal), 
  * 				et renvoyer des lexèmes (mots) à l'analyseur syntaxique
  *
 **/
