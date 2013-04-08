@@ -65,6 +65,7 @@ int main (int argc, char *argv[])
 	printf ("\nCréation pile ...\n");
 	SPile *Pile;
 	Pile = CreationPile (Racine);
+	printf ("\nAffichage de la pile ...\n");
 	AfficherPile (Pile);
 	free (Racine);
 

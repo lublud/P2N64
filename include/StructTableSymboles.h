@@ -35,9 +35,10 @@ extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type,
 
 extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
-extern STableSymbole *CreationTableSymbole (SNoeud *Racine, SPile *Courant);
+extern void CreationTableSymbole (SNoeud *Racine, SPile *Courant);
 extern SPile *CreationPile (SNoeud *Racine);
-extern int VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
+extern int VerifierDispoVariable (STableSymbole *PremiereTablePile,
+							char *NomVariable, char *NomFonctionCourante);
 extern void AfficherPile (SPile *Pile);
 
 #include "StructTableSymboles.hxx"
