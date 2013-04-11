@@ -153,69 +153,72 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 			TableCourante = TableCourante->SuivantElement;
 
 
-			STableSymbole *TStmp, *PremiereTablePile;
-			TStmp = (STableSymbole *) malloc (sizeof (STableSymbole));
-
-			SPile *PileTmp;
-
-			for (PileTmp = Courant; ; PileTmp = PileTmp->Suivant)
-				if (NULL == PileTmp->Suivant)
-				{
-					PileTmp->Suivant = AjoutTableSymboleSurPile (TStmp);
-					PileTmp = PileTmp->Suivant;
-					break;
-				}
-
-			free (TStmp);
-
-			TStmp = PremiereTablePile = PileTmp->TableSymbole;
-
-			int NbParametre = 0;
-			int AdresseNouvellePile = 0;
-
-			for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils4.Frere)
+			if (NULL != NoeudCourant->Fils2.Fils->Fils1.Nom)
 			{
+				STableSymbole *TStmp, *PremiereTablePile;
+				TStmp = (STableSymbole *) malloc (sizeof (STableSymbole));
 
-				if (TYPE_SNOEUDFILS == tmp->TypeF3)
-				{
-					IndiceDebut = tmp->Fils3.Fils->Fils1.Nombre;
-					IndiceFin = tmp->Fils3.Fils->Fils2.Nombre;
-					TypeVariable = tmp->Fils3.Fils->Fils3.Nombre;
-				}
-				else
-				{
-					IndiceDebut = IndiceFin = NULL;
-					TypeVariable = tmp->Fils3.Nombre;
-				}
+				SPile *PileTmp;
 
-				for (SNoeud *ParamMemeType = tmp; ;
-						ParamMemeType = ParamMemeType->Fils2.Frere)
-				{
-					if (NULL == ParamMemeType->Fils1.Nom)
+				for (PileTmp = Courant; ; PileTmp = PileTmp->Suivant)
+					if (NULL == PileTmp->Suivant)
+					{
+						PileTmp->Suivant = AjoutTableSymboleSurPile (TStmp);
+						PileTmp = PileTmp->Suivant;
 						break;
+					}
 
-					if (1 > ++NbParametre)
-						VerifierDispoVariable (PremiereTablePile, ParamMemeType->Fils1.Nom);
+				free (TStmp);
 
-					TStmp->SuivantElement = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
-							TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
-					AdresseNouvellePile += 4;
+				TStmp = PremiereTablePile = PileTmp->TableSymbole;
+
+				int NbParametre = 0;
+				int AdresseNouvellePile = 0;
+
+				for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils4.Frere)
+				{
+
+					if (TYPE_SNOEUDFILS == tmp->TypeF3)
+					{
+						IndiceDebut = tmp->Fils3.Fils->Fils1.Nombre;
+						IndiceFin = tmp->Fils3.Fils->Fils2.Nombre;
+						TypeVariable = tmp->Fils3.Fils->Fils3.Nombre;
+					}
+					else
+					{
+						IndiceDebut = IndiceFin = NULL;
+						TypeVariable = tmp->Fils3.Nombre;
+					}
+
+					for (SNoeud *ParamMemeType = tmp; ;
+							ParamMemeType = ParamMemeType->Fils2.Frere)
+					{
+						if (NULL == ParamMemeType->Fils1.Nom)
+							break;
+
+						if (1 > ++NbParametre)
+							VerifierDispoVariable (PremiereTablePile, ParamMemeType->Fils1.Nom);
+
+						TStmp->SuivantElement = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+								TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+						AdresseNouvellePile += 4;
 
 
-					if (NULL == ParamMemeType->Fils2.Frere)
-						break;
+						if (NULL == ParamMemeType->Fils2.Frere)
+							break;
+
+						TStmp = TStmp->SuivantElement;
+
+					}
 
 					TStmp = TStmp->SuivantElement;
-
+					if (NULL == tmp->Fils4.Frere)
+						break;
 				}
 
-				TStmp = TStmp->SuivantElement;
-				if (NULL == tmp->Fils4.Frere)
-					break;
+
+				TableCourante->NbParametre = NbParametre;
 			}
-
-
-			TableCourante->NbParametre = NbParametre;
 
 		} //DECLFUNC
 		else if (DECLPROC == NoeudCourant->Type)
