@@ -20,14 +20,14 @@ typedef struct STableSymbole
 	int IndiceDebut;
 	int IndiceFin;
 	int Adresse;
-	struct STableSymbole *Parametre;
+	int NbParametre;
 	struct STableSymbole *SuivantElement;
 } STableSymbole;
 
 typedef struct SPile
 {
 	STableSymbole *TableSymbole;
-	struct Pile *Suivant;
+	struct SPile *Suivant;
 } SPile;
 
 extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type,
@@ -37,8 +37,7 @@ extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
 extern void CreationTableSymbole (SNoeud *Racine, SPile *Courant);
 extern SPile *CreationPile (SNoeud *Racine);
-extern int VerifierDispoVariable (STableSymbole *PremiereTablePile,
-							char *NomVariable, char *NomFonctionCourante);
+extern void VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
 extern void AfficherPile (SPile *Pile);
 
 #include "StructTableSymboles.hxx"

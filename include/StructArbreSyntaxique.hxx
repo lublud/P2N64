@@ -234,7 +234,7 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils1.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
+		sprintf (buf, "\t{rank = same; \"%s\" -> \"%s\";}\n", Precedent, Suivant);
 
 		if (FACTEUR != Racine->Type)
 		{
@@ -306,7 +306,7 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils2.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
+		sprintf (buf, "\t{rank = same; \"%s\" -> \"%s\";}\n", Precedent, Suivant);
 
 		if (FACTEUR != Racine->Type)
 		{
@@ -378,7 +378,7 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils3.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
+		sprintf (buf, "\t{rank = same; \"%s\" -> \"%s\";}\n", Precedent, Suivant);
 
 		if (FACTEUR != Racine->Type)
 		{
@@ -450,7 +450,7 @@ void CreationArbreDot (char *pathname, SNoeud *Racine, char *Courant)
 	{
 		strcpy (Precedent, Courant);
 		sprintf (Suivant, "%d_%d", Racine->Fils4.Frere->Type, ++DiffSuivant);
-		sprintf (buf, "\t\"%s\" -> \"%s\";\n", Precedent, Suivant);
+		sprintf (buf, "\t{rank = same; \"%s\" -> \"%s\";}\n", Precedent, Suivant);
 
 		if (FACTEUR != Racine->Type)
 		{
