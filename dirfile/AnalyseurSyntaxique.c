@@ -148,7 +148,7 @@ SNoeud *DeclarationProcedure ()
 
 	Accept (PROCEDURE);
 
-	Noeud->Fils1.Nom = yytext;
+	Noeud->Fils1.Nom = CreerChaine (yytext);
 	Noeud->TypeF1 = TYPE_NOM;
 	Accept (IDENTIFIANT);
 	Accept ('(');

@@ -15,7 +15,7 @@
 
 #include "StructTableSymboles.h"
 
-unsigned Adresse;
+unsigned Adresse = 0;
 
 STableSymbole *AjoutElementTableSymbole (char *Nom, int Type,
 							int IndiceDebut, int IndiceFin, int Adresse)
@@ -43,7 +43,6 @@ SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole)
 
 	pile->TableSymbole = TableSymbole;
 	pile->Suivant = NULL;
-	Adresse = 0;
 
 	return pile;
 
@@ -153,6 +152,7 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 			TableCourante = TableCourante->SuivantElement;
 
 
+			int NbParametre = 0;
 			if (NULL != NoeudCourant->Fils2.Fils->Fils1.Nom)
 			{
 				STableSymbole *TStmp, *PremiereTablePile;
@@ -172,7 +172,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 
 				TStmp = PremiereTablePile = PileTmp->TableSymbole;
 
-				int NbParametre = 0;
 				int AdresseNouvellePile = 0;
 
 				for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils4.Frere)
@@ -196,33 +195,122 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant)
 						if (NULL == ParamMemeType->Fils1.Nom)
 							break;
 
-						if (1 > ++NbParametre)
+						if (1 < ++NbParametre)
+						{
 							VerifierDispoVariable (PremiereTablePile, ParamMemeType->Fils1.Nom);
 
-						TStmp->SuivantElement = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
-								TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+							TStmp->SuivantElement = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+									TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+							TStmp = TStmp->SuivantElement;
+						}
+						else
+
+							TStmp = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+									TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+
 						AdresseNouvellePile += 4;
 
 
 						if (NULL == ParamMemeType->Fils2.Frere)
 							break;
 
-						TStmp = TStmp->SuivantElement;
-
 					}
 
-					TStmp = TStmp->SuivantElement;
 					if (NULL == tmp->Fils4.Frere)
 						break;
 				}
 
-
-				TableCourante->NbParametre = NbParametre;
 			}
+
+			TableCourante->NbParametre = NbParametre;
 
 		} //DECLFUNC
 		else if (DECLPROC == NoeudCourant->Type)
 		{
+
+			TypeVariable = IndiceDebut = IndiceFin = NULL;
+
+			char *NomProcedure = NoeudCourant->Fils1.Nom;
+			VerifierDispoVariable (Courant->TableSymbole, NomProcedure);
+			TableCourante->SuivantElement = AjoutElementTableSymbole (NomProcedure, TypeVariable,
+					IndiceDebut, IndiceFin, Adresse);
+			Adresse += 4;
+
+			TableCourante = TableCourante->SuivantElement;
+
+
+			int NbParametre = 0;
+			if (NULL != NoeudCourant->Fils2.Fils->Fils1.Nom)
+			{
+				STableSymbole *TStmp, *PremiereTablePile;
+				TStmp = (STableSymbole *) malloc (sizeof (STableSymbole));
+
+				SPile *PileTmp;
+
+				for (PileTmp = Courant; ; PileTmp = PileTmp->Suivant)
+					if (NULL == PileTmp->Suivant)
+					{
+						PileTmp->Suivant = AjoutTableSymboleSurPile (TStmp);
+						PileTmp = PileTmp->Suivant;
+						break;
+					}
+
+				free (TStmp);
+
+				TStmp = PremiereTablePile = PileTmp->TableSymbole;
+
+				int AdresseNouvellePile = 0;
+
+				for (SNoeud *tmp = NoeudCourant->Fils2.Fils; ; tmp = tmp->Fils4.Frere)
+				{
+
+					if (TYPE_SNOEUDFILS == tmp->TypeF3)
+					{
+						IndiceDebut = tmp->Fils3.Fils->Fils1.Nombre;
+						IndiceFin = tmp->Fils3.Fils->Fils2.Nombre;
+						TypeVariable = tmp->Fils3.Fils->Fils3.Nombre;
+					}
+					else
+					{
+						IndiceDebut = IndiceFin = NULL;
+						TypeVariable = tmp->Fils3.Nombre;
+					}
+
+					for (SNoeud *ParamMemeType = tmp; ;
+							ParamMemeType = ParamMemeType->Fils2.Frere)
+					{
+						if (NULL == ParamMemeType->Fils1.Nom)
+							break;
+
+						if (1 < ++NbParametre)
+						{
+							VerifierDispoVariable (PremiereTablePile, ParamMemeType->Fils1.Nom);
+
+							TStmp->SuivantElement = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+									TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+							TStmp = TStmp->SuivantElement;
+						}
+						else
+
+							TStmp = AjoutElementTableSymbole (ParamMemeType->Fils1.Nom,
+									TypeVariable, IndiceDebut, IndiceFin, AdresseNouvellePile);
+
+						AdresseNouvellePile += 4;
+
+
+						if (NULL == ParamMemeType->Fils2.Frere)
+							break;
+
+					}
+
+					if (NULL == tmp->Fils4.Frere)
+						break;
+				}
+
+			}
+
+			TableCourante->NbParametre = NbParametre;
+
 		} // DECLPROC
 
 		CreationTableSymbole (Racine->Fils1.Fils, Courant);
