@@ -21,6 +21,7 @@ typedef struct STableSymbole
 	int IndiceFin;
 	int Adresse;
 	int NbParametre;
+	char *NomFonction;
 	struct STableSymbole *SuivantElement;
 } STableSymbole;
 
@@ -30,8 +31,8 @@ typedef struct SPile
 	struct SPile *Suivant;
 } SPile;
 
-extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type,
-									int IndiceDebut, int IndiceFin, int Adresse);
+extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParametre,
+									int IndiceDebut, int IndiceFin, int Adresse, char *NomFonction);
 
 extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
