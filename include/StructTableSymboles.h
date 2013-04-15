@@ -36,7 +36,7 @@ extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParam
 
 extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
-extern void CreationTableSymbole (SNoeud *Racine, SPile *Courant);
+extern void CreationTableSymbole (SNoeud *Racine, SPile *Couranti, char *NomFonctionCourante);
 extern SPile *CreationPile (SNoeud *Racine);
 extern void VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
 extern void AfficherPile (SPile *Pile);
