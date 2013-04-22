@@ -94,3 +94,5 @@ char yytext[1024];
 int LinePas = 1;
 char *FilePas;
 int lexeme;
+struct STableSymbole *TableVarGlobal;
+struct SOperande *OperandeG, *OperandeD;

@@ -65,10 +65,12 @@ int main (int argc, char *argv[])
 	printf ("\nCréation pile ...\n");
 	SPile *Pile;
 	Pile = CreationPile (Racine);
-	printf ("\nAffichage de la pile ...\n");
-	AfficherPile (Pile);
-	free (Racine);
 
+	printf ("\nAffichage de la table des symboles ...\n");
+	AfficherPile (Pile);
+
+	free (Racine);
+	free (Pile);
 	exit (0);
 
 } // main()

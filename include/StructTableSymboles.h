@@ -22,6 +22,8 @@ typedef struct STableSymbole
 	int Adresse;
 	int NbParametre;
 	char *NomFonction;
+	int NbUtilisation;
+
 	struct STableSymbole *SuivantElement;
 } STableSymbole;
 
@@ -31,15 +33,33 @@ typedef struct SPile
 	struct SPile *Suivant;
 } SPile;
 
+union MyUnionOp
+{
+	char *Nom;
+	int Nombre;
+
+};
+
+typedef struct SOperande
+{
+	int TypeOperande;
+	union MyUnionOp IDOperande;
+	int TypeID;
+
+} SOperande;
+
 extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParametre,
 									int IndiceDebut, int IndiceFin, int Adresse, char *NomFonction);
-
 extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
 extern void CreationTableSymbole (SNoeud *Racine, SPile *Couranti, char *NomFonctionCourante);
 extern SPile *CreationPile (SNoeud *Racine);
+
 extern void VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
+extern int VerifierExistenceVaribale (STableSymbole *PremiereTablePile, char *NomVariable);
+
 extern void AfficherPile (SPile *Pile);
+extern void ErreurTypes (SOperande *OpG, SOperande *OpD);
 
 #include "StructTableSymboles.hxx"
 #endif /* __STRUCTTABLESYMBOLES_H__ */

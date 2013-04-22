@@ -19,7 +19,7 @@ unsigned Adresse = 0;
 
 
 STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParametre,
-							int IndiceDebut, int IndiceFin, int Adresse, char *NomFonction)
+		int IndiceDebut, int IndiceFin, int Adresse, char *NomFonction)
 {
 	STableSymbole *elem;
 	elem = (STableSymbole *) malloc (sizeof (STableSymbole));
@@ -31,6 +31,7 @@ STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParametre,
 	elem->Adresse = Adresse;
 	elem->NbParametre = NbParametre;
 	elem->NomFonction = NomFonction;
+	elem->NbUtilisation = 0;
 	elem->SuivantElement = NULL;
 
 	return elem;
@@ -67,8 +68,101 @@ void VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable)
 
 	}
 
-
 } // VerifierDispoVariable ()
+
+
+int VerifierExistenceVariable (STableSymbole *PremiereTablePile, char *NomVariable)
+{
+
+	STableSymbole *TS = PremiereTablePile;
+
+	for (; ; TS = TS->SuivantElement)
+	{
+		if (0 == strcmp (NomVariable, TS->Nom))
+		{
+			++TS->NbUtilisation;
+			return TS->Type;
+		}
+
+		if (NULL == TS->SuivantElement)
+			break;
+	}
+
+	TS = TableVarGlobal;
+
+	for (; ; TS = TS->SuivantElement)
+	{
+		if (0 == strcmp (NomVariable, TS->Nom))
+		{
+			++TS->NbUtilisation;
+			return TS->Type;
+		}
+
+		if (NULL == TS->SuivantElement)
+			break;
+	}
+
+	printf ("Error: '%s': undeclared identifier\n", NomVariable);
+	exit (1);
+
+} // VerifierExistenceVariable ()
+
+
+void VerifierUtilisationVariables (SPile * Pile)
+{
+	for (SPile *Piletmp = Pile; ; Piletmp = Piletmp->Suivant)
+	{
+		for (STableSymbole *tmp = Piletmp->TableSymbole; ; tmp = tmp->SuivantElement)
+		{
+			if (0 == tmp->NbUtilisation)
+				printf ("Warning: %s not used\n", tmp->Nom);
+
+			if (NULL == tmp->SuivantElement)
+				break;
+
+		}
+
+		if (NULL == Piletmp->Suivant)
+			break;
+	}
+
+} // VerifierUtilisationVariables ()
+
+void ErreurTypes (SOperande *OpG, SOperande *OpD)
+{
+	char *TypeOpG, *TypeOpD;
+	TypeOpG = (char *) malloc (16);
+	TypeOpD = (char *) malloc (16);
+
+	if (INTEGER == OpG->TypeOperande)
+		sprintf (TypeOpG, "integer");
+	else
+		sprintf (TypeOpG, "boolean");
+
+	if (INTEGER == OpD->TypeOperande)
+		sprintf (TypeOpD, "integer");
+	else
+		sprintf (TypeOpD, "boolean");
+
+	if (TYPE_NOM == OpG->TypeID && TYPE_NOM == OpD->TypeID)
+		printf ("Error: type of %s (%s) does not correspond to %s (%s)\n",
+				OpG->IDOperande.Nom, TypeOpG, OpD->IDOperande.Nom, TypeOpD);
+	if (TYPE_NOM == OpG->TypeID && TYPE_INT == OpD->TypeID)
+		printf ("Error: type of %s (%s) does not correspond to %d (%s)\n",
+				OpG->IDOperande.Nom, TypeOpG, OpD->IDOperande.Nombre, TypeOpD);
+	if (TYPE_INT == OpG->TypeID && TYPE_NOM == OpD->TypeID)
+		printf ("Error: type of %d (%s) does not correspond to %s (%s)\n",
+				OpG->IDOperande.Nombre, TypeOpG, OpD->IDOperande.Nom, TypeOpD);
+	if (TYPE_INT == OpG->TypeID && TYPE_INT == OpD->TypeID)
+		printf ("Error: type of %d (%s) does not correspond to %d (%s)\n",
+				OpG->IDOperande.Nombre, TypeOpG, OpD->IDOperande.Nombre, TypeOpD);
+
+	free (TypeOpG);
+	free (TypeOpD);
+
+	exit (1);
+
+} // ErreurTypes ()
 
 void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCourante)
 {
@@ -84,9 +178,39 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	if (PRGM == Racine->Type)
 	{
 		TableCourante = AjoutElementTableSymbole (Racine->Fils1.Nom, NULL, -1, NULL, NULL, NULL, NULL);
-		return CreationTableSymbole (Racine->Fils2.Fils, Courant, NULL);
+		TableCourante->NbUtilisation = 1;
+		TableVarGlobal = TableCourante;
 
-	}
+		/* Ajout read (), write (), readln (), writeln () dans la Table */
+		TableCourante->SuivantElement = AjoutElementTableSymbole ("read", 270, -1,
+				NULL, NULL, NULL, Racine->Fils1.Nom);
+		TableCourante = TableCourante->SuivantElement;
+		TableCourante->NbUtilisation = 1;
+
+		TableCourante->SuivantElement = AjoutElementTableSymbole ("write", NULL, 1,
+				NULL, NULL, NULL, Racine->Fils1.Nom);
+		TableCourante = TableCourante->SuivantElement;
+		TableCourante->NbUtilisation = 1;
+
+		TableCourante->SuivantElement = AjoutElementTableSymbole ("readln", 270, -1,
+				NULL, NULL, NULL, Racine->Fils1.Nom);
+		TableCourante = TableCourante->SuivantElement;
+		TableCourante->NbUtilisation = 1;
+
+		TableCourante->SuivantElement = AjoutElementTableSymbole ("writeln", NULL, 1,
+				NULL, NULL, NULL, Racine->Fils1.Nom);
+		TableCourante = TableCourante->SuivantElement;
+		TableCourante->NbUtilisation = 1;
+
+		return CreationTableSymbole (Racine->Fils2.Fils, Courant, Racine->Fils1.Nom);
+
+	} // PRGM
+	else if (INSTRUCTION == Racine->Type)
+	{
+		OperandeG->TypeOperande = OperandeD->TypeOperande = -1;
+		CreationTableSymbole (Racine->Fils1.Fils, Courant, NULL);
+
+	} // INSTRUCTION
 
 	if (TYPE_SNOEUDFILS == Racine->TypeF1)
 	{
@@ -235,7 +359,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 			Adresse = AdresseTmp;
 
-
 		} // DECLFUNC || DECLPROC
 		else
 			CreationTableSymbole (Racine->Fils1.Fils, Courant, NULL);
@@ -248,17 +371,50 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	}
 	else if (TYPE_INT == Racine->TypeF1)
 	{
+		if (FACTEUR == Racine->Type)
+			if (-1 == OperandeG->TypeOperande)
+			{
+				OperandeG->TypeOperande = INTEGER;
+				OperandeG->IDOperande.Nombre = Racine->Fils1.Nombre;
+				OperandeG->TypeID = TYPE_INT;
+			}
+			else if (-1 == OperandeD->TypeOperande)
+			{
+				OperandeD->TypeOperande = INTEGER;
+				OperandeD->IDOperande.Nombre = Racine->Fils1.Nombre;
+				OperandeD->TypeID = TYPE_INT;
 
+				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+					ErreurTypes (OperandeG, OperandeD);
+				OperandeD->TypeOperande = -1;
+			}
 	}
 	else if (TYPE_NOM == Racine->TypeF1)
 	{
+		VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils1.Nom);
+		if (-1 == OperandeG->TypeOperande)
+		{
+			OperandeG->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils1.Nom);
+			OperandeG->IDOperande.Nom = Racine->Fils1.Nom;
+			OperandeG->TypeID = TYPE_NOM;
+		}
+		else if (-1 == OperandeD->TypeOperande)
+		{
+			OperandeD->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils1.Nom);
+			OperandeD->IDOperande.Nom = Racine->Fils1.Nom;
+			OperandeD->TypeID = TYPE_NOM;
 
+			if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+				ErreurTypes (OperandeG, OperandeD);
+			OperandeD->TypeOperande = -1;
+		}
 	}
 
 	if (TYPE_SNOEUDFILS == Racine->TypeF2)
 	{
 		NoeudCourant = Racine->Fils2.Fils;
 		CreationTableSymbole (Racine->Fils2.Fils, Courant, NULL);
+
 	}
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF2)
 	{
@@ -267,16 +423,49 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	}
 	else if (TYPE_INT == Racine->TypeF2)
 	{
+		if (FACTEUR == Racine->Type)
+			if (-1 == OperandeG->TypeOperande)
+			{
+				OperandeG->TypeOperande = INTEGER;
+				OperandeG->IDOperande.Nombre = Racine->Fils2.Nombre;
+				OperandeG->TypeID = TYPE_INT;
+			}
+			else if (-1 == OperandeD->TypeOperande)
+			{
+				OperandeD->TypeOperande = INTEGER;
+				OperandeD->IDOperande.Nombre = Racine->Fils2.Nombre;
+				OperandeD->TypeID = TYPE_INT;
 
+				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+					ErreurTypes (OperandeG, OperandeD);
+				OperandeD->TypeOperande = -1;
+			}
 	}
 	else if (TYPE_NOM == Racine->TypeF2)
 	{
+		VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils2.Nom);
+		if (-1 == OperandeG->TypeOperande)
+		{
+			OperandeG->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils2.Nom);
+			OperandeG->IDOperande.Nom = Racine->Fils2.Nom;
+			OperandeG->TypeID = TYPE_NOM;
+		}
+		else if (-1 == OperandeD->TypeOperande)
+		{
+			OperandeD->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils2.Nom);
+			OperandeD->IDOperande.Nom = Racine->Fils2.Nom;
+			OperandeD->TypeID = TYPE_NOM;
 
+			if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+				ErreurTypes (OperandeG, OperandeD);
+			OperandeD->TypeOperande = -1;
+		}
 	}
 	if (TYPE_SNOEUDFILS == Racine->TypeF3)
 	{
 		NoeudCourant = Racine->Fils3.Fils;
 		CreationTableSymbole (Racine->Fils3.Fils, Courant, NULL);
+
 	}
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF3)
 	{
@@ -285,16 +474,49 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	}
 	else if (TYPE_INT == Racine->TypeF3)
 	{
+		if (FACTEUR == Racine->Type)
+			if (-1 == OperandeG->TypeOperande)
+			{
+				OperandeG->TypeOperande = INTEGER;
+				OperandeG->IDOperande.Nombre = Racine->Fils3.Nombre;
+				OperandeG->TypeID = TYPE_INT;
+			}
+			else if (-1 == OperandeD->TypeOperande)
+			{
+				OperandeD->TypeOperande = INTEGER;
+				OperandeD->IDOperande.Nombre = Racine->Fils3.Nombre;
+				OperandeD->TypeID = TYPE_INT;
 
+				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+					ErreurTypes (OperandeG, OperandeD);
+				OperandeD->TypeOperande = -1;
+			}
 	}
 	else if (TYPE_NOM == Racine->TypeF3)
 	{
+		VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils3.Nom);
+		if (-1 == OperandeG->TypeOperande)
+		{
+			OperandeG->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils3.Nom);
+			OperandeG->IDOperande.Nom = Racine->Fils3.Nom;
+			OperandeG->TypeID = TYPE_NOM;
+		}
+		else if (-1 == OperandeD->TypeOperande)
+		{
+			OperandeG->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils3.Nom);
+			OperandeG->IDOperande.Nom = Racine->Fils3.Nom;
+			OperandeG->TypeID = TYPE_NOM;
 
+			if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+				ErreurTypes (OperandeG, OperandeD);
+			OperandeD->TypeOperande = -1;
+		}
 	}
 	if (TYPE_SNOEUDFILS == Racine->TypeF4)
 	{
 		NoeudCourant = Racine->Fils4.Fils;
 		CreationTableSymbole (Racine->Fils4.Fils, Courant, NULL);
+
 	}
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF4)
 	{
@@ -303,12 +525,45 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	}
 	else if (TYPE_INT == Racine->TypeF4)
 	{
+		if (FACTEUR == Racine->Type)
+			if (-1 == OperandeG->TypeOperande)
+			{
+				OperandeG->TypeOperande = INTEGER;
+				OperandeG->IDOperande.Nombre = Racine->Fils4.Nombre;
+				OperandeG->TypeID = TYPE_INT;
+			}
+			else if (-1 == OperandeD->TypeOperande)
+			{
+				OperandeD->TypeOperande = INTEGER;
+				OperandeD->IDOperande.Nombre = Racine->Fils4.Nombre;
+				OperandeD->TypeID = TYPE_INT;
 
+				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+					ErreurTypes (OperandeG, OperandeD);
+				OperandeD->TypeOperande = -1;
+			}
 	}
 	else if (TYPE_NOM == Racine->TypeF4)
 	{
+		VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils4.Nom);
+		if (-1 == OperandeG->TypeOperande)
+		{
+			OperandeG->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils4.Nom);
+			OperandeG->IDOperande.Nom = Racine->Fils4.Nom;
+			OperandeG->TypeID = TYPE_NOM;
+		}
+		else if (-1 == OperandeD->TypeOperande)
+		{
+			OperandeD->TypeOperande = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils4.Nom);
+			OperandeD->IDOperande.Nom = Racine->Fils4.Nom;
+			OperandeD->TypeID = TYPE_NOM;
 
+			if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+				ErreurTypes (OperandeG, OperandeD);
+			OperandeD->TypeOperande = -1;
+		}
 	}
+
 
 } // CreationTableSymbole ()
 
@@ -319,7 +574,16 @@ SPile * CreationPile (SNoeud *Racine)
 	TS = (STableSymbole *) malloc (sizeof (STableSymbole));
 	Pile = AjoutTableSymboleSurPile (TS);
 	free (TS);
+
+	OperandeG = (SOperande *) malloc (sizeof (SOperande));
+	OperandeD = (SOperande *) malloc (sizeof (SOperande));
+
 	CreationTableSymbole (Racine, Pile, NULL);
+
+	free (OperandeG);
+	free (OperandeD);
+
+	VerifierUtilisationVariables (Pile);
 
 	return Pile;
 
@@ -334,7 +598,7 @@ void AfficherPile (SPile *Pile)
 		for (STableSymbole *tmp = Piletmp->TableSymbole; ; tmp = tmp->SuivantElement)
 		{
 			printf ("Nom : %s\nType : %d\nIndice début : %d\nIndice Fin : %d\n"
-						"Adresse : %d\nNombre Paramètre : %d\nNom Fonction : %s\n\n",
+					"Adresse : %d\nNombre Paramètre : %d\nNom Fonction : %s\n\n",
 					tmp->Nom, tmp->Type, tmp->IndiceDebut,
 					tmp->IndiceFin, tmp->Adresse,
 					tmp->NbParametre, tmp->NomFonction);
