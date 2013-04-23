@@ -52,11 +52,12 @@ extern STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParam
 									int IndiceDebut, int IndiceFin, int Adresse, char *NomFonction);
 extern SPile *AjoutTableSymboleSurPile (STableSymbole *TableSymbole);
 
-extern void CreationTableSymbole (SNoeud *Racine, SPile *Couranti, char *NomFonctionCourante);
+extern void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCourante);
 extern SPile *CreationPile (SNoeud *Racine);
 
 extern void VerifierDispoVariable (STableSymbole *PremiereTablePile, char *NomVariable);
 extern int VerifierExistenceVaribale (STableSymbole *PremiereTablePile, char *NomVariable);
+extern void VerifierParametre (char *NomFonction, int TypeParam);
 
 extern void AfficherPile (SPile *Pile);
 extern void ErreurTypes (SOperande *OpG, SOperande *OpD);
