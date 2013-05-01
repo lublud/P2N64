@@ -95,7 +95,7 @@ int LinePas = 1;
 char *FilePas;
 int lexeme;
 int IsTableau, IndiceFinGlob, IndiceDebGlob;
-int NbParamVerif, NbParamAVerif, NomFonctionAVerif, NbArgLu;
+int NbParamVerif, NbParamAVerif, NomFonctionAVerif;
 struct STableSymbole *TableVarGlobal;
 struct SOperande *OperandeG, *OperandeD;
 struct SPile *DebPile;

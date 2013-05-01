@@ -173,6 +173,7 @@ void VerifierParametre (char *NomFonction, int TypeParam)
 	}
 
 
+	/* Je récupère la première table de la pile de la fonction */
 	for (; ; PileTmp = PileTmp->Suivant)
 		if (0 == strcmp (NomFonction, PileTmp->TableSymbole->NomFonction) )
 		{
@@ -180,6 +181,7 @@ void VerifierParametre (char *NomFonction, int TypeParam)
 			break;
 		}
 
+	/* Parcours de la table des symboles de la fonction */
 	for (int i = 0; ; TS = TS->SuivantElement)
 	{
 		if (i++ == NbParamVerif)
@@ -332,7 +334,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 		int NbParamAVerifTmp = NbParamAVerif;
 		int NbParamVerifTmp = NbParamVerif;
-		int NbParamLuTmp = NbArgLu;
 		char *NomFoncTmp = NomFonctionAVerif;
 
 		NbParamVerif = NbParamAVerif = -1;
@@ -352,7 +353,7 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 				/* comme on a vérifier la fonction dans laquelle on était */
 				/* et non la fonction imbriquée dans laquelle on est */
 				++NbParamVerifTmp;
-				--NbParamVerif;
+				NbParamVerif = 0;
 			}
 
 			/* Je pars à la recherche des paramètres */
@@ -372,7 +373,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 			NbParamAVerif = NbParamAVerifTmp;
 			NbParamVerif = NbParamVerifTmp;
-			NbArgLu = NbParamLuTmp;
 			NomFonctionAVerif = NomFoncTmp;
 
 			return;
@@ -382,7 +382,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 		NbParamAVerif = NbParamAVerifTmp;
 		NbParamVerif = NbParamVerifTmp;
-		NbArgLu = NbParamLuTmp;
 		NomFonctionAVerif = NomFoncTmp;
 
 	} // FACTEUR || APPELPROC
