@@ -94,6 +94,7 @@ char yytext[1024];
 int LinePas = 1;
 char *FilePas;
 int lexeme;
+int IsTableau, IndiceFinGlob, IndiceDebGlob;
 int NbParamVerif, NbParamAVerif, NomFonctionAVerif, NbArgLu;
 struct STableSymbole *TableVarGlobal;
 struct SOperande *OperandeG, *OperandeD;

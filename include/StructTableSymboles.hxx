@@ -16,6 +16,7 @@
 #include "StructTableSymboles.h"
 
 unsigned Adresse = 0;
+int TypeInstruction;
 
 
 STableSymbole *AjoutElementTableSymbole (char *Nom, int Type, int NbParametre,
@@ -75,21 +76,33 @@ int VerifierExistenceVariable (STableSymbole *PremiereTablePile, char *NomVariab
 {
 
 	STableSymbole *TS = PremiereTablePile;
+	int OperandeGtmp = -1;
+	int TypeReturn = -1;
 
-	for (; ; TS = TS->SuivantElement)
+	if (AFF == TypeInstruction && -1 == OperandeG->TypeOperande)
+		OperandeGtmp = 1;
+
+	for (; -1 == TypeReturn; TS = TS->SuivantElement)
 	{
 		if (0 == strcmp (NomVariable, TS->Nom))
 		{
 			++TS->NbUtilisation;
 
-			if (-1 != TS->NbParametre)
+			if (-1 != TS->NbParametre && 1 != OperandeGtmp)
 			{
 				NomFonctionAVerif = TS->Nom;
-				NbParamAVerif = TS->NbParametre + 1; // +1 pour l'ID de la fonction
+				NbParamAVerif = TS->NbParametre;
 				NbParamVerif = 0;
 			}
 
-			return TS->Type;
+			TypeReturn = TS->Type;
+			IndiceDebGlob = TS->IndiceDebut;
+			IndiceFinGlob = TS->IndiceFin;
+
+			if (0 != TS->IndiceDebut && 0 != TS->IndiceFin)
+				IsTableau = 1;
+			else
+				IsTableau = 0;
 		}
 
 		if (NULL == TS->SuivantElement)
@@ -98,54 +111,67 @@ int VerifierExistenceVariable (STableSymbole *PremiereTablePile, char *NomVariab
 
 	TS = TableVarGlobal;
 
-	for (; ; TS = TS->SuivantElement)
+	for (; -1 == TypeReturn; TS = TS->SuivantElement)
 	{
 		if (0 == strcmp (NomVariable, TS->Nom))
 		{
 			++TS->NbUtilisation;
 
-			if (-1 != TS->NbParametre)
+			if (-1 != TS->NbParametre && 1 != OperandeGtmp)
 			{
 				NomFonctionAVerif = TS->Nom;
-				NbParamAVerif = TS->NbParametre + 1; // +1 pour l'ID de la fonction
+				NbParamAVerif = TS->NbParametre;
 				NbParamVerif = 0;
 			}
 
-			return TS->Type;
+			TypeReturn = TS->Type;
+			IndiceDebGlob = TS->IndiceDebut;
+			IndiceFinGlob = TS->IndiceFin;
+			if (0 != TS->IndiceDebut && 0 != TS->IndiceFin)
+				IsTableau = 1;
+			else
+				IsTableau = 0;
 		}
 
 		if (NULL == TS->SuivantElement)
 			break;
 	}
 
-	printf ("Error: '%s': undeclared identifier\n", NomVariable);
-	free (TS);
+	if (COMPARAISON == TypeInstruction && BOOL == TypeReturn)
+		printf ("Error: '%s' can't be a boolean.\n", NomVariable);
+	else if (-1 != TypeReturn)
+		return TypeReturn;
+	else
+		printf ("Error: '%s': undeclared identifier.\n", NomVariable);
 
+	free (TS);
 	exit (1);
 
 } // VerifierExistenceVariable ()
 
 void VerifierParametre (char *NomFonction, int TypeParam)
 {
-	if (0 == NbParamVerif)
+
+	/* Si on vérifie un nouvel arg alors qu'ils ont tous été vérifier */
+	if (NbParamVerif >= NbParamAVerif)
 	{
-		++NbParamVerif; // ID de la fonction
+		/* C'est un arg de trop */
+		++NbParamVerif; /* On ++ pour le message d'erreur ... */
 		return;
 	}
-
-	++NbArgLu;
 
 	SPile *PileTmp = DebPile->Suivant;
 	STableSymbole *TS;
 	char *TypeRecu = (char *) malloc (16);
 
 	if (NomFonction == "read"   ||
-		NomFonction == "readln" ||
-		NomFonction == "write"  ||
-		NomFonction == "writeln")
+			NomFonction == "readln" ||
+			NomFonction == "write"  ||
+			NomFonction == "writeln")
 	{
 		return;
 	}
+
 
 	for (; ; PileTmp = PileTmp->Suivant)
 		if (0 == strcmp (NomFonction, PileTmp->TableSymbole->NomFonction) )
@@ -156,7 +182,7 @@ void VerifierParametre (char *NomFonction, int TypeParam)
 
 	for (int i = 0; ; TS = TS->SuivantElement)
 	{
-		if (++i == NbParamVerif)
+		if (i++ == NbParamVerif)
 		{
 			if (TypeParam == TS->Type)
 			{
@@ -288,26 +314,78 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 		return CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
 
 	} // PRGM
+	else if (AFF == Racine->Type)
+		TypeInstruction = AFF;
+	else if (COMPARAISON == Racine->Type && NULL != Racine->Fils3.Fils->Fils2.Fils)
+		TypeInstruction = COMPARAISON;
 	else if (INSTRUCTION == Racine->Type)
 	{
+
 		OperandeG->TypeOperande = OperandeD->TypeOperande = -1;
-		NbArgLu = 1;
-		NbParamAVerif = -1;
 
-		CreationTableSymbole (Racine->Fils1.Fils, Courant, NomFonctionCourante);
-
-		if (NbArgLu > NbParamAVerif && -1 != NbParamAVerif)
-		{
-			printf ("Error: Too many arguments for %s.\n", NomFonctionAVerif);
-			exit (1);
-		}
-		else if (NbArgLu < NbParamAVerif && -1 != NbParamAVerif)
-		{
-			printf ("Error: Too few arguments for %s.\n", NomFonctionAVerif);
-			exit (1);
-		}
+		TypeInstruction = -1;
 
 	} // INSTRUCTION
+	if (FACTEUR == Racine->Type || APPELPROC == Racine->Type)
+	{
+		int TypeVar;
+
+		int NbParamAVerifTmp = NbParamAVerif;
+		int NbParamVerifTmp = NbParamVerif;
+		int NbParamLuTmp = NbArgLu;
+		char *NomFoncTmp = NomFonctionAVerif;
+
+		NbParamVerif = NbParamAVerif = -1;
+
+		if (TYPE_NOM == Racine->TypeF1)
+			TypeVar = VerifierExistenceVariable (Courant->TableSymbole, Racine->Fils1.Nom);
+
+		if (-1 != NbParamAVerif)
+		{
+			/* Je suis sur l'appel d'une fonction */
+
+			/* Je vérifie le nom de la fonction en cours si elle existe... */
+			if (-1 != NbParamAVerifTmp)
+			{
+				VerifierParametre (NomFoncTmp, TypeVar);
+				/* On modifie les nb param vérifier */
+				/* comme on a vérifier la fonction dans laquelle on était */
+				/* et non la fonction imbriquée dans laquelle on est */
+				++NbParamVerifTmp;
+				--NbParamVerif;
+			}
+
+			/* Je pars à la recherche des paramètres */
+			CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
+
+
+			if (NbParamVerif > NbParamAVerif)
+			{
+				printf ("Error: Too many arguments for %s.\n", NomFonctionAVerif);
+				exit (1);
+			}
+			else if (NbParamVerif < NbParamAVerif)
+			{
+				printf ("Error: Too few arguments for %s.\n", NomFonctionAVerif);
+				exit (1);
+			}
+
+			NbParamAVerif = NbParamAVerifTmp;
+			NbParamVerif = NbParamVerifTmp;
+			NbArgLu = NbParamLuTmp;
+			NomFonctionAVerif = NomFoncTmp;
+
+			return;
+
+
+		}
+
+		NbParamAVerif = NbParamAVerifTmp;
+		NbParamVerif = NbParamVerifTmp;
+		NbArgLu = NbParamLuTmp;
+		NomFonctionAVerif = NomFoncTmp;
+
+	} // FACTEUR || APPELPROC
 
 	if (TYPE_SNOEUDFILS == Racine->TypeF1)
 	{
@@ -351,7 +429,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 		} // DECLVAR
 		else if (DECLFUNC == NoeudCourant->Type || DECLPROC == NoeudCourant->Type)
 		{
-
 			int AdresseTmp = Adresse;
 			Adresse = 0;
 
@@ -468,25 +545,38 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	}
 	else if (TYPE_INT == Racine->TypeF1)
 	{
-		if (FACTEUR == Racine->Type)
-			if (-1 != NbParamAVerif)
-				VerifierParametre (NomFonctionAVerif, INTEGER);
-			else if (-1 == OperandeG->TypeOperande)
-			{
-				OperandeG->TypeOperande = INTEGER;
-				OperandeG->IDOperande.Nombre = Racine->Fils1.Nombre;
-				OperandeG->TypeID = TYPE_INT;
-			}
-			else if (-1 == OperandeD->TypeOperande)
-			{
-				OperandeD->TypeOperande = INTEGER;
-				OperandeD->IDOperande.Nombre = Racine->Fils1.Nombre;
-				OperandeD->TypeID = TYPE_INT;
+		if (-1 != NbParamAVerif && FACTEUR == Racine->Type)
+			VerifierParametre (NomFonctionAVerif, INTEGER);
 
-				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
-					ErreurTypes (OperandeG, OperandeD);
-				OperandeD->TypeOperande = -1;
+		if (FACTEUR == Racine->Type && AFF == TypeInstruction && -1 == NbParamAVerif)
+		{
+			if (1 == IsTableau &&
+					(Racine->Fils1.Nombre < IndiceDebGlob ||
+					 Racine->Fils1.Nombre > IndiceFinGlob))
+			{
+				printf ("Error: %d is not between %d and %d.\n", Racine->Fils1.Nombre,
+						IndiceDebGlob, IndiceFinGlob);
+				exit (1);
 			}
+
+			if (0 == IsTableau)
+				if (-1 == OperandeG->TypeOperande)
+				{
+					OperandeG->TypeOperande = INTEGER;
+					OperandeG->IDOperande.Nombre = Racine->Fils1.Nombre;
+					OperandeG->TypeID = TYPE_INT;
+				}
+				else if (-1 == OperandeD->TypeOperande)
+				{
+					OperandeD->TypeOperande = INTEGER;
+					OperandeD->IDOperande.Nombre = Racine->Fils1.Nombre;
+					OperandeD->TypeID = TYPE_INT;
+
+					if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+						ErreurTypes (OperandeG, OperandeD);
+					OperandeD->TypeOperande = -1;
+				}
+		}
 	}
 	else if (TYPE_NOM == Racine->TypeF1)
 	{
@@ -494,22 +584,25 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 		if (-1 != NbParamAVerif)
 			VerifierParametre (NomFonctionAVerif, TypeVar);
-		else if (-1 == OperandeG->TypeOperande)
-		{
-			OperandeG->TypeOperande = TypeVar;
-			OperandeG->IDOperande.Nom = Racine->Fils1.Nom;
-			OperandeG->TypeID = TYPE_NOM;
-		}
-		else if (-1 == OperandeD->TypeOperande)
-		{
-			OperandeD->TypeOperande = TypeVar;
-			OperandeD->IDOperande.Nom = Racine->Fils1.Nom;
-			OperandeD->TypeID = TYPE_NOM;
 
-			if (OperandeG->TypeOperande != OperandeD->TypeOperande)
-				ErreurTypes (OperandeG, OperandeD);
-			OperandeD->TypeOperande = -1;
-		}
+		if (AFF == TypeInstruction && -1 == NbParamAVerif)
+			if (-1 == OperandeG->TypeOperande)
+			{
+				OperandeG->TypeOperande = TypeVar;
+				OperandeG->IDOperande.Nom = Racine->Fils1.Nom;
+				OperandeG->TypeID = TYPE_NOM;
+			}
+			else if (-1 == OperandeD->TypeOperande)
+			{
+				OperandeD->TypeOperande = TypeVar;
+				OperandeD->IDOperande.Nom = Racine->Fils1.Nom;
+				OperandeD->TypeID = TYPE_NOM;
+
+				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
+					ErreurTypes (OperandeG, OperandeD);
+				OperandeD->TypeOperande = -1;
+			}
+
 	}
 
 
@@ -568,7 +661,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	else if (TYPE_NOM == Racine->TypeF4)
 	{
 	}
-
 
 } // CreationTableSymbole ()
 

@@ -66,8 +66,8 @@ int main (int argc, char *argv[])
 	SPile *Pile;
 	Pile = CreationPile (Racine);
 
-	printf ("\nAffichage de la table des symboles ...\n");
-	AfficherPile (Pile);
+	//printf ("\nAffichage de la table des symboles ...\n");
+	//AfficherPile (Pile);
 
 	free (Racine);
 	free (Pile);
