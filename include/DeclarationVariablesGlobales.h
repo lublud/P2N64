@@ -90,12 +90,17 @@ enum
 };
 
 FILE *yyin;
+
 char yytext[1024];
-int LinePas = 1;
 char *FilePas;
-int lexeme;
+char *AffASM;
+
+int LinePas = 1;
+int lexeme, fd;
+int OpGASM, OpDASM, IsInstruction;
 int IsTableau, IndiceFinGlob, IndiceDebGlob;
 int NbParamVerif, NbParamAVerif, NomFonctionAVerif;
+
 struct STableSymbole *TableVarGlobal;
 struct SOperande *OperandeG, *OperandeD;
 struct SPile *DebPile;

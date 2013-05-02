@@ -169,6 +169,7 @@ void VerifierParametre (char *NomFonction, int TypeParam)
 			NomFonction == "write"  ||
 			NomFonction == "writeln")
 	{
+		NbParamVerif = NbParamAVerif;
 		return;
 	}
 
@@ -274,11 +275,69 @@ void ErreurTypes (SOperande *OpG, SOperande *OpD)
 
 } // ErreurTypes ()
 
+int RecupereAdresse (STableSymbole *PremiereTablePile, char *NomVariable)
+{
+	STableSymbole *TS = PremiereTablePile;
+
+	for (; ; TS = TS->SuivantElement)
+	{
+		if (0 == strcmp (NomVariable, TS->Nom))
+			return TS->Adresse;
+
+		if (NULL == TS->SuivantElement)
+			break;
+	}
+
+	TS = TableVarGlobal;
+
+	for (; ; TS = TS->SuivantElement)
+	{
+		if (0 == strcmp (NomVariable, TS->Nom))
+			return TS->Adresse;
+
+		if (NULL == TS->SuivantElement)
+			break;
+	}
+
+} // RecupereAdresse ()
+
+void GenereCode (char *NomFonction)
+{
+	char *Retour = (char *) malloc (256);
+
+	if (0 == strcmp (NomFonction, "read"))
+		sprintf (Retour, "\taddi $v0, $zero, 5\nsyscall\n");
+	else if (0 == strcmp (NomFonction, "readln"))
+		sprintf (Retour, "\taddi $v0, $zero, 5\n\tsyscall\n");
+	else if (0 == strcmp (NomFonction, "write"))
+		sprintf (Retour, "\taddi $v0, $zero, 1\n\tsyscall\n");
+	else if (0 == strcmp (NomFonction, "writeln"))
+	{
+		char *tmp = (char *) malloc (32);
+		sprintf (Retour, "\taddi $v0, $zero, 1\n\tsyscall\n");
+		sprintf (tmp, "\tla $a0, rc\n\tadd $v0, $zero, 4\n\tsyscall\n");
+		strcat (Retour, tmp);
+		free (tmp);
+	}
+	else if (0 == strcmp (NomFonction, "exit"))
+		sprintf (Retour, "\taddi $v0, $zero, 10\n\tsyscall\n");
+
+	if (write (fd, Retour, strlen (Retour)) < 0)
+	{
+		perror ("write ()");
+		exit (1);
+	}
+
+	free (Retour);
+
+} // GenereCodeWriteRead ()
+
 void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCourante)
 {
 	STableSymbole *TableCourante;
 	SNoeud *NoeudCourant;
 	int IndiceDebut, IndiceFin, TypeVariable;
+	char *TempChar = (char *) malloc (64);
 
 	for (TableCourante = Courant->TableSymbole; ; TableCourante = TableCourante->SuivantElement)
 		if (NULL == TableCourante->SuivantElement)
@@ -287,6 +346,18 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 	if (PRGM == Racine->Type)
 	{
+
+		char *NomSection = (char *) malloc (64);
+		sprintf (NomSection, "main:\n");
+
+		if (write (fd, NomSection, strlen (NomSection)) < 0)
+		{
+			perror ("write ()");
+			exit (1);
+		}
+		free (NomSection);
+
+
 		TableCourante = AjoutElementTableSymbole (Racine->Fils1.Nom, NULL, -1, NULL, NULL, NULL, NULL);
 		TableCourante->NbUtilisation = 1;
 		TableVarGlobal = TableCourante;
@@ -326,6 +397,10 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 		OperandeG->TypeOperande = OperandeD->TypeOperande = -1;
 
 		TypeInstruction = -1;
+
+		IsInstruction = 0;
+		OpGASM = OpDASM = -1;
+		AffASM = (char *) malloc (32);
 
 	} // INSTRUCTION
 	if (FACTEUR == Racine->Type || APPELPROC == Racine->Type)
@@ -377,7 +452,6 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 
 			return;
 
-
 		}
 
 		NbParamAVerif = NbParamAVerifTmp;
@@ -385,6 +459,7 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 		NomFonctionAVerif = NomFoncTmp;
 
 	} // FACTEUR || APPELPROC
+
 
 	if (TYPE_SNOEUDFILS == Racine->TypeF1)
 	{
@@ -428,6 +503,17 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 		} // DECLVAR
 		else if (DECLFUNC == NoeudCourant->Type || DECLPROC == NoeudCourant->Type)
 		{
+
+			char *NomSection = (char *) malloc (64);
+			sprintf (NomSection, "%s:\n", NoeudCourant->Fils1.Nom);
+
+			if (write (fd, NomSection, strlen (NomSection)) < 0)
+			{
+				perror ("write ()");
+				exit (1);
+			}
+
+			free (NomSection);
 			int AdresseTmp = Adresse;
 			Adresse = 0;
 
@@ -559,6 +645,27 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 			}
 
 			if (0 == IsTableau)
+			{
+				if (1 == IsInstruction)
+				{
+					if (-1 == OpGASM)
+					{
+						sprintf (TempChar, "\taddi $t1, $zero, %d\n", Racine->Fils1.Nombre);
+						OpGASM = 1;
+					}
+					else
+					{
+						sprintf (TempChar, "\taddi $t2, $zero, %d\n", Racine->Fils1.Nombre);
+						OpDASM = 1;
+					}
+
+					if (write (fd, TempChar, strlen (TempChar)) < 0)
+					{
+						perror ("write ()");
+						exit (1);
+					}
+				}
+
 				if (-1 == OperandeG->TypeOperande)
 				{
 					OperandeG->TypeOperande = INTEGER;
@@ -575,6 +682,7 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 						ErreurTypes (OperandeG, OperandeD);
 					OperandeD->TypeOperande = -1;
 				}
+			}
 		}
 	}
 	else if (TYPE_NOM == Racine->TypeF1)
@@ -585,11 +693,17 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 			VerifierParametre (NomFonctionAVerif, TypeVar);
 
 		if (AFF == TypeInstruction && -1 == NbParamAVerif)
+		{
+			int adr = RecupereAdresse (Courant->TableSymbole, Racine->Fils1.Nom);
+
 			if (-1 == OperandeG->TypeOperande)
 			{
 				OperandeG->TypeOperande = TypeVar;
 				OperandeG->IDOperande.Nom = Racine->Fils1.Nom;
 				OperandeG->TypeID = TYPE_NOM;
+
+				if (1 == IsInstruction)
+					sprintf (AffASM, "\tadd $t0, $zero, $t0\n\tsw $t0, %d($sp)\n", adr);
 			}
 			else if (-1 == OperandeD->TypeOperande)
 			{
@@ -600,7 +714,26 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 				if (OperandeG->TypeOperande != OperandeD->TypeOperande)
 					ErreurTypes (OperandeG, OperandeD);
 				OperandeD->TypeOperande = -1;
+
+				if (-1 == OpGASM && 1 == IsInstruction)
+				{
+					sprintf (TempChar, "\tlw $t1, %d($sp)\n", adr);
+					OpGASM = 1;
+				}
+				else if (1 == IsInstruction)
+				{
+					sprintf (TempChar, "\tlw $t2, %d($sp)\n", adr);
+					OpDASM = 1;
+				}
+
 			}
+
+			if (1 == IsInstruction && write (fd, TempChar, strlen (TempChar)) < 0)
+			{
+				perror ("write ()");
+				exit (1);
+			}
+		}
 
 	}
 
@@ -608,19 +741,120 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	if (TYPE_SNOEUDFILS == Racine->TypeF2)
 	{
 		NoeudCourant = Racine->Fils2.Fils;
-		CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
+		if (EXPRARITH == NoeudCourant->Type)
+		{
+			if (TYPE_INT != NoeudCourant->TypeF3 && AFF == TypeInstruction && 0 == IsInstruction)
+			{
+				sprintf (TempChar, "\tadd $t0, $zero, $t1\n");
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+			}
+			else //if (TYPE_INT == NoeudCourant->TypeF3)
+			{
+				int IsIntrTemp = IsInstruction;
+
+				char *operateur = (char *) malloc (4);
+				if ('+' == NoeudCourant->Fils3.Nombre)
+					sprintf (operateur, "add");
+				else if ('-' == NoeudCourant->Fils3.Nombre)
+					sprintf (operateur, "sub");
+
+				IsInstruction = 1;
+				OpGASM = -1;
+				OpDASM = -1;
+				CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
+
+				if (-1 == OpDASM)
+					sprintf (TempChar, "\t%s $t0, $t1, $t0\n", operateur);
+				else
+					sprintf (TempChar, "\t%s $t0, $t1, $t2\n", operateur);
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+
+				if (0 != IsInstruction)
+					if (write (fd, AffASM, strlen (AffASM)) < 0)
+					{
+						perror ("write ()");
+						exit (1);
+					}
+
+
+				free (operateur);
+				IsInstruction = IsIntrTemp;
+			}
+		}
+		else if (TERME == NoeudCourant->Type)
+		{
+			if (TYPE_INT != NoeudCourant->TypeF2 && AFF == TypeInstruction && 0 == IsInstruction)
+			{
+				sprintf (TempChar, "\tadd $t0, $zero, $t1\n");
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+			}
+			else //if (TYPE_INT == NoeudCourant->TypeF2)
+			{
+				int IsIntrTemp = IsInstruction;
+
+				IsInstruction = 1;
+				OpGASM = -1;
+				OpDASM = -1;
+				CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
+				if (-1 == OpDASM)
+				{
+					if ('*' == NoeudCourant->Fils2.Nombre)
+						sprintf (TempChar, "\tmul $t0, $t1, $t0\n");
+					else if (DIV == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tdiv $t1, $t0\n\tmflo $t0");
+					else if (MOD == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tmod $t1, $t0\n\tmfhi $t0");
+				}
+				else
+				{
+					if ('*' == NoeudCourant->Fils2.Nombre)
+						sprintf (TempChar, "\tmul $t0, $t1, $t2\n");
+					else if (DIV == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tdiv $t1, $t2\n\tmflo $t0");
+					else if (MOD == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tmod $t1, $t2\n\tmfhi $t0");
+				}
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+
+				if (0 != IsInstruction)
+					if (write (fd, AffASM, strlen (AffASM)) < 0)
+					{
+						perror ("write ()");
+						exit (1);
+					}
+
+
+				IsInstruction = IsIntrTemp;
+			}
+		}
+		else
+			CreationTableSymbole (Racine->Fils2.Fils, Courant, NomFonctionCourante);
 
 	}
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF2)
 	{
 		NoeudCourant = Racine->Fils2.Frere;
 		CreationTableSymbole (Racine->Fils2.Frere, Courant, NomFonctionCourante);
-	}
-	else if (TYPE_INT == Racine->TypeF2)
-	{
-	}
-	else if (TYPE_NOM == Racine->TypeF2)
-	{
 	}
 
 
@@ -633,13 +867,64 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF3)
 	{
 		NoeudCourant = Racine->Fils3.Frere;
-		CreationTableSymbole (Racine->Fils3.Frere, Courant, NomFonctionCourante);
-	}
-	else if (TYPE_INT == Racine->TypeF3)
-	{
-	}
-	else if (TYPE_NOM == Racine->TypeF3)
-	{
+		if (TERME == NoeudCourant->Type)
+		{
+			if (TYPE_INT != NoeudCourant->TypeF2 && AFF == TypeInstruction && 0 == IsInstruction)
+			{
+				sprintf (TempChar, "\tadd $t0, $zero, $t1\n");
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+			}
+			else //if (TYPE_INT == NoeudCourant->TypeF2)
+			{
+				int IsIntrTemp = IsInstruction;
+
+				IsInstruction = 1;
+				OpGASM = -1;
+				OpDASM = -1;
+				CreationTableSymbole (Racine->Fils3.Frere, Courant, NomFonctionCourante);
+				if (-1 == OpDASM)
+				{
+					if ('*' == NoeudCourant->Fils2.Nombre)
+						sprintf (TempChar, "\tmul $t0, $t1, $t0\n");
+					else if (DIV == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tdiv $t1, $t0\n\tmflo $t0");
+					else if (MOD == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tmod $t1, $t0\n\tmfhi $t0");
+				}
+				else
+				{
+					if ('*' == NoeudCourant->Fils2.Nombre)
+						sprintf (TempChar, "\tmul $t0, $t1, $t2\n");
+					else if (DIV == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tdiv $t1, $t2\n\tmflo $t0");
+					else if (MOD == NoeudCourant->Fils2.Nom)
+						sprintf (TempChar, "\tmod $t1, $t2\n\tmfhi $t0");
+				}
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+
+				if (0 != IsInstruction)
+					if (write (fd, AffASM, strlen (AffASM)) < 0)
+					{
+						perror ("write ()");
+						exit (1);
+					}
+
+
+				IsInstruction = IsIntrTemp;
+			}
+		}
+		else
+			CreationTableSymbole (Racine->Fils3.Frere, Courant, NomFonctionCourante);
 	}
 
 
@@ -652,13 +937,59 @@ void CreationTableSymbole (SNoeud *Racine, SPile *Courant, char *NomFonctionCour
 	else if (TYPE_SNOEUDFRERE == Racine->TypeF4)
 	{
 		NoeudCourant = Racine->Fils4.Frere;
-		CreationTableSymbole (Racine->Fils4.Frere, Courant, NomFonctionCourante);
-	}
-	else if (TYPE_INT == Racine->TypeF4)
-	{
-	}
-	else if (TYPE_NOM == Racine->TypeF4)
-	{
+		if (EXPRARITH == NoeudCourant->Type)
+		{
+			if (TYPE_INT != NoeudCourant->TypeF3 && AFF == TypeInstruction && 0 == IsInstruction)
+			{
+				sprintf (TempChar, "\tadd $t0, $zero, $t1\n");
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+			}
+			else //if (TYPE_INT == NoeudCourant->TypeF3)
+			{
+
+				int IsIntrTemp = IsInstruction;
+
+				char *operateur = (char *) malloc (4);
+				if ('+' == NoeudCourant->Fils3.Nombre)
+					sprintf (operateur, "add");
+				else if ('-' == NoeudCourant->Fils3.Nombre)
+					sprintf (operateur, "sub");
+
+				IsInstruction = 1;
+				OpGASM = -1;
+				OpDASM = -1;
+				CreationTableSymbole (Racine->Fils4.Frere, Courant, NomFonctionCourante);
+
+				if (-1 == OpDASM)
+					sprintf (TempChar, "\t%s $t0, $t1, $t0\n", operateur);
+				else
+					sprintf (TempChar, "\t%s $t0, $t1, $t2\n", operateur);
+
+				if (write (fd, TempChar, strlen (TempChar)) < 0)
+				{
+					perror ("write ()");
+					exit (1);
+				}
+
+				if (0 != IsInstruction)
+					if (write (fd, AffASM, strlen (AffASM)) < 0)
+					{
+						perror ("write ()");
+						exit (1);
+					}
+
+
+				free (operateur);
+				IsInstruction = IsIntrTemp;
+			}
+		}
+		else
+			CreationTableSymbole (Racine->Fils4.Frere, Courant, NomFonctionCourante);
 	}
 
 } // CreationTableSymbole ()

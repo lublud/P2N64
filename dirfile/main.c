@@ -17,11 +17,13 @@ int main (int argc, char *argv[])
 
 	if (1 + 1 != argc)
 	{
-		printf ("You're a n00b, expected only one argument");
+		printf ("Expected only one argument");
 		exit (1);
 	}
-	FilePas = argv[1];
 	char Reponse[1];
+	char *NomFicAsm;
+
+	FilePas = argv[1];
 
 	SNoeud *Racine = CreerNoeud ();
 
@@ -30,6 +32,7 @@ int main (int argc, char *argv[])
 	Racine = ProgrammePascal ();
 	fclose (yyin);
 
+	/*
 	printf ("Voulez vous créer l'arbre "
 			"(GraphViz est nécessaire pour continuer...) (o/n) ");
 	scanf ("%s", Reponse);
@@ -61,14 +64,26 @@ int main (int argc, char *argv[])
 		free (pathname);
 
 	}
+	*/
 
-	printf ("\nCréation pile ...\n");
+	NomFicAsm = (char *) malloc (64);
+	sprintf (NomFicAsm, "%s.asm", argv[1]);
+	fd = open (NomFicAsm, O_WRONLY | O_CREAT, 0644);
+
+	if (fd < 0)
+	{
+		perror ("open ()");
+		exit (1);
+	}
+	free (NomFicAsm);
+
 	SPile *Pile;
 	Pile = CreationPile (Racine);
 
 	//printf ("\nAffichage de la table des symboles ...\n");
 	//AfficherPile (Pile);
 
+	//free (NomFicAsm);
 	free (Racine);
 	free (Pile);
 	exit (0);

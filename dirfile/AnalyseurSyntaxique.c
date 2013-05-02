@@ -21,7 +21,7 @@ void AcceptLex (const int attendu, const char *File, const int Line)
 				FilePas, LinePas, File, Line, yytext);
 		exit (1);
 	}
-	printf ("%d\n", lexeme);
+	//printf ("%d\t%s\n", lexeme, yytext);
 	lexeme = yylex();
 } // Accept()
 
